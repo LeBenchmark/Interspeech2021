@@ -16,7 +16,7 @@ SLU: Spoken Language Understanding
 
 AER: Automatic Emotion Recognition
 
-AST: Automatic Speech Translation
+[AST: Automatic Speech Translation](https://github.com/LeBenchmark/Interspeech2021/tree/main/AST)
 
 (this page is still under construction)
 
