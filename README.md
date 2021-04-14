@@ -3,6 +3,5 @@ This repository describes our reproducible framework for assessing self-supervis
 
 Our pre-trained SSL models for French are available through this HuggingFace link: https://huggingface.co/LeBenchmark
 
-_(this page will be updated by April 2d!!!)
-_
+(this page is still under construction)
 
