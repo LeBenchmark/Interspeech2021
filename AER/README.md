@@ -1,7 +1,16 @@
 # Automatic Emotion Recognition
 
-[TOC]
+## Table of Contents  
+  * [Requirements](#Requirements)
+  * [Access to Datasets](#Access)
+  * [Preprocessing Data](#Preprocessing)
+  * [Extracting features](#Features)
+    * [Mel Filter Bank (MFB) Features](#MFB)
+    * [Wav2vec Features](#Wav2vec)
+  * [Running Experiments](#Experiments)
 
+
+<a name="Requirements"></a>
 ## Requirements
 
 To satisfy the requirements for running experiments please refer to environment.yml file,
@@ -14,7 +23,7 @@ conda activate emotionCampaign1
 Note: To extract `wav2vec` features using fairseq, the version used is "1.0.0a0+5273bbb"
 
 
-
+<a name="Access"></a>
 ## Access to Datasets
 
 Datasets used here were RECOLA and AlloSat, information regarding how to access them can be found below:
@@ -24,7 +33,7 @@ RECOLA: https://diuf.unifr.ch/main/diva/recola/download.html
 AlloSat: https://lium.univ-lemans.fr/en/allosat/
 
 
-
+<a name="Preprocessing"></a>
 ## Preprocessing Data
 
 The audio files in each dataset should first be preprocessed to be 16 KHz, mono channel and 16 bit single integer. In order to do that `Preprocess.py` file may be used, an example can be seen here:
@@ -54,9 +63,10 @@ Note: Please change the path inside each file to refer to the directory in which
 Note: Other preprocessing related files like changing the sampling frequency of the data can be found under `FeatureExtraction\DatasetHandling`.
 
 
-
+<a name="Features"></a>
 ## Extracting features
 
+<a name="MFB"></a>
 ### Mel Filter Bank (MFB) Features
 
 To produce MFB features, the following code may be used:
@@ -71,6 +81,7 @@ Then it should be followed by a standardisation step:
 python Standardize.py -f MFB -j "[path_to_datasets]/Datasets/RECOLA/data.json"
 ```
 
+<a name="Wav2vec"></a>
 ### Wav2vec Features
 
 An example code to produce Wav2vec features:
@@ -80,7 +91,7 @@ python wav2vec2.py -f "FlowBERT_2952h_base_cut30" -d 29.99 -n True -j "[path_to_
 ```
 
 
-
+<a name="Experiments"></a>
 ## Running Experiments
 
 In order to run experiments, first we need to define it. A script defining the preliminary experiments is provided under `Experiments` folder:
