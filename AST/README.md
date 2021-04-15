@@ -1,6 +1,24 @@
 # Automatic Speech-to-text Translation (AST)
 
-We describe the steps to reproduce our AST results presented in the paper (Section 5.3).
+We describe the steps to reproduce our AST results presented in the paper (Section 5.3).  
+
+The following table (corresponding to Table 5 in the paper) shows the results using different speech features on the dev/valid and test sets of CoVoST-2 and multilingual TEDx where `MFB` means log Mel filterbank, `W2V2` denotes wav2vec models trained on monolingual speech, and `XLSR-53` is the multilingual wav2vec model trained on [53 languages](https://arxiv.org/abs/2006.13979). Except for the 4 models named `W2V2-Fr-S/M` whhich are the ones that we trained on our collected datasets, all remaining models are off-the-shelf ones that we obtained from previous work.
+
+|                    | Dev/Valid data ||||  Test data ||||  |
+|                    | CoVoST-2 | multilingual TEDx ||| CoVoST-2 | multilingual TEDx |||  |
+| Input features     | fr-en | fr-en | fr-es | fr-pt | fr-en | fr-en | fr-es | fr-pt | Link |
+| ----- | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: |
+| MFB                |   **23.37** | 1.14 | 0.84 | 0.49 | **22.66** | 1.33 | 0.98 | 0.68 |
+| W2V2-En-*base*     |   19.24 | 0.90 | 0.65 | 0.43 | 18.19 | 0.88 | 0.34 | 0.27 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt)
+| W2V2-En-*large*    |   17.07 | 0.75 | 0.61 | 0.45 | 16.45 | 0.85 | 0.67 | 0.32 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt)
+| W2V2-Fr-S-*base*   |   19.86 | 2.64 | 0.49 | 0.50 | 19.04 | 1.66 | 0.67 | 0.61 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-S-base)
+| W2V2-Fr-S-*large*  |   19.62 | 5.12 | 4.62 | **2.06** | 18.61 | 2.97 | 3.19 | **2.25** | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-S-large)
+| W2V2-Fr-M-*base*   |   19.47 | 6.98 | 1.87 | 0.63 | 18.32 | 6.37 | 1.99 | 0.54 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base)
+| W2V2-Fr-M-*large*  |   20.17 | **9.35** | **7.72** | 1.58 | 19.35 | **6.76** | **6.63** | 1.63 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large)
+| W2V2-Fr-VP-*base*  |   18.44 | 0.81 | 0.45 | 0.56 | 17.40 | 0.89 | 0.58 | 0.75 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_base_fr.pt)
+| W2V2-Fr-VP-*large* |   20.72 | 7.43 | 4.66 | 0.43 | 19.88 | 5.39 | 3.62 | 0.49 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_large_fr.pt)
+| XLSR-53-*large*    |   20.54 | 0.59 | 0.41 | 0.49 | 19.93 | 0.44 | 0.62 | 0.29 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt)
+
 
 ## Datasets
 We selected subsets having French as the source language in two large multilingual speech corpora: CoVoST-2 and multilingual TEDx. 
