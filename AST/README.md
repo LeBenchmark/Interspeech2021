@@ -2,7 +2,7 @@
 
 We describe the steps to reproduce our AST results presented in the paper (Section 5.3).  
 
-The following table (corresponding to Table 5 in the paper) shows the results using different speech features on the dev/valid and test sets of CoVoST-2 and multilingual TEDx.
+The following table (corresponding to Table 5 in the paper) shows the results using different speech features on the dev/valid and test sets of CoVoST-2 (CV2) and multilingual TEDx (mTEDx).
 
 <table>
   <thead>
@@ -16,9 +16,9 @@ The following table (corresponding to Table 5 in the paper) shows the results us
     <thead>
     <tr>
       <th></th>
-      <th>CoVoST-2</th>
+      <th>CV2</th>
       <th colspan="3">multilingual TEDx</th>
-      <th>CoVoST-2</th>
+      <th>CV2</th>
       <th colspan="3">multilingual TEDx</th>
       <th></th>
     </tr>
@@ -40,11 +40,11 @@ The following table (corresponding to Table 5 in the paper) shows the results us
   <tbody>
     <tr>
 	 <td>MFB</td>
-	 <td>23.37</td>
+	 <td><b>23.37</td>
 	 <td>1.14</td>
 	 <td>0.84</td>
 	 <td>0.49</td>
-	 <td>22.66</td>
+	 <td><b>22.66</td>
 	 <td>1.33</td>
 	 <td>0.98</td>
 	 <td>0.68</td>
@@ -91,11 +91,11 @@ The following table (corresponding to Table 5 in the paper) shows the results us
 	 <td>19.62</td>
 	 <td>5.12</td>
 	 <td>4.62</td>
-	 <td>2.06</td>
+	 <td><b>2.06</td>
 	 <td>18.61</td>
 	 <td>2.97</td>
 	 <td>3.19</td>
-	 <td>2.25</td>
+	 <td><b>2.25</td>
 	 <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-S-large>Download</a></td>
 </tr>
 <tr>
@@ -113,12 +113,12 @@ The following table (corresponding to Table 5 in the paper) shows the results us
 <tr>
 	 <td>W2V2-Fr-M-large</td>
 	 <td>20.17</td>
-	 <td>9.35</td>
-	 <td>7.72</td>
+	 <td><b>9.35</td>
+	 <td><b>7.72</td>
 	 <td>1.58</td>
 	 <td>19.35</td>
-	 <td>6.76</td>
-	 <td>6.63</td>
+	 <td><b>6.76</td>
+	 <td><b>6.63</td>
 	 <td>1.63</td>
 	 <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large>Download</a></td>
 </tr>
