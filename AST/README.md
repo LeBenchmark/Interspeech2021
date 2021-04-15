@@ -4,20 +4,178 @@ We describe the steps to reproduce our AST results presented in the paper (Secti
 
 The following table (corresponding to Table 5 in the paper) shows the results using different speech features on the dev/valid and test sets of CoVoST-2 and multilingual TEDx where `MFB` means log Mel filterbank, `W2V2` denotes wav2vec models trained on monolingual speech, and `XLSR-53` is the multilingual wav2vec model trained on [53 languages](https://arxiv.org/abs/2006.13979). Except for the 4 models named `W2V2-Fr-S/M` whhich are the ones that we trained on our collected datasets, all remaining models are off-the-shelf ones that we obtained from previous work.
 
-|                    | Dev/Valid data ||||  Test data ||||  |
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="4">Dev/Valid data</th>
+      <th colspan="4">Test data</th>
+      <th></th>
+    </tr>
+  </thead>
+    <thead>
+    <tr>
+      <th></th>
+      <th>CoVoST-2</th>
+      <th colspan="3">multilingual TEDx</th>
+      <th>CoVoST-2</th>
+      <th colspan="3">multilingual TEDx</th>
+      <th></th>
+    </tr>
+    </thead>
+    <thead>
+    <tr>
+      <th>Input features</th>
+      <th>fr-en</th>
+      <th>fr-en</th>
+      <th>fr-es</th>
+      <th>fr-pt</th>
+      <th>fr-en</th>
+      <th>fr-en</th>
+      <th>fr-es</th>
+      <th>fr-pt</th>
+      <th>Link</th>
+    </tr>
+    </thead>
+  <tbody>
+    <tr>
+	 <td>MFB</td>
+	 <td>23.37</td>
+	 <td>1.14</td>
+	 <td>0.84</td>
+	 <td>0.49</td>
+	 <td>22.66</td>
+	 <td>1.33</td>
+	 <td>0.98</td>
+	 <td>0.68</td>
+	 <td></td>
+</tr>
+<tr>
+	 <td>W2V2-En-base</td>
+	 <td>19.24</td>
+	 <td>0.90</td>
+	 <td>0.65</td>
+	 <td>0.43</td>
+	 <td>18.19</td>
+	 <td>0.88</td>
+	 <td>0.34</td>
+	 <td>0.27</td>
+	 <td><a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-En-large</td>
+	 <td>17.07</td>
+	 <td>0.75</td>
+	 <td>0.61</td>
+	 <td>0.45</td>
+	 <td>16.45</td>
+	 <td>0.85</td>
+	 <td>0.67</td>
+	 <td>0.32</td>
+	 <td><a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-Fr-S-base</td>
+	 <td>19.86</td>
+	 <td>2.64</td>
+	 <td>0.49</td>
+	 <td>0.50</td>
+	 <td>19.04</td>
+	 <td>1.66</td>
+	 <td>0.67</td>
+	 <td>0.61</td>
+	 <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-S-base>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-Fr-S-large</td>
+	 <td>19.62</td>
+	 <td>5.12</td>
+	 <td>4.62</td>
+	 <td>2.06</td>
+	 <td>18.61</td>
+	 <td>2.97</td>
+	 <td>3.19</td>
+	 <td>2.25</td>
+	 <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-S-large>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-Fr-M-base</td>
+	 <td>19.47</td>
+	 <td>6.98</td>
+	 <td>1.87</td>
+	 <td>0.63</td>
+	 <td>18.32</td>
+	 <td>6.37</td>
+	 <td>1.99</td>
+	 <td>0.54</td>
+	 <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-Fr-M-large</td>
+	 <td>20.17</td>
+	 <td>9.35</td>
+	 <td>7.72</td>
+	 <td>1.58</td>
+	 <td>19.35</td>
+	 <td>6.76</td>
+	 <td>6.63</td>
+	 <td>1.63</td>
+	 <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-Fr-VP-base</td>
+	 <td>18.44</td>
+	 <td>0.81</td>
+	 <td>0.45</td>
+	 <td>0.56</td>
+	 <td>17.40</td>
+	 <td>0.89</td>
+	 <td>0.58</td>
+	 <td>0.75</td>
+	 <td><a href=https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_base_fr.pt>Download</a></td>
+</tr>
+<tr>
+	 <td>W2V2-Fr-VP-large</td>
+	 <td>20.72</td>
+	 <td>7.43</td>
+	 <td>4.66</td>
+	 <td>0.43</td>
+	 <td>19.88</td>
+	 <td>5.39</td>
+	 <td>3.62</td>
+	 <td>0.49</td>
+	 <td><a href=https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_large_fr.pt>Download</a></td>
+</tr>
+<tr>
+	 <td>XLSR-53-large</td>
+	 <td>20.54</td>
+	 <td>0.59</td>
+	 <td>0.41</td>
+	 <td>0.49</td>
+	 <td>19.93</td>
+	 <td>0.44</td>
+	 <td>0.62</td>
+	 <td>0.29</td>
+	 <td><a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt>Download</a></td>
+</tr>
+  </tbody>
+</table>
+
+<!-- |                    |              Dev/Valid data ||||                   Test data ||||  |
 |                    | CoVoST-2 | multilingual TEDx ||| CoVoST-2 | multilingual TEDx |||  |
-| Input features     | fr-en | fr-en | fr-es | fr-pt | fr-en | fr-en | fr-es | fr-pt | Link |
-| ----- | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: |
-| MFB                |   **23.37** | 1.14 | 0.84 | 0.49 | **22.66** | 1.33 | 0.98 | 0.68 |
-| W2V2-En-*base*     |   19.24 | 0.90 | 0.65 | 0.43 | 18.19 | 0.88 | 0.34 | 0.27 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt)
-| W2V2-En-*large*    |   17.07 | 0.75 | 0.61 | 0.45 | 16.45 | 0.85 | 0.67 | 0.32 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt)
-| W2V2-Fr-S-*base*   |   19.86 | 2.64 | 0.49 | 0.50 | 19.04 | 1.66 | 0.67 | 0.61 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-S-base)
-| W2V2-Fr-S-*large*  |   19.62 | 5.12 | 4.62 | **2.06** | 18.61 | 2.97 | 3.19 | **2.25** | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-S-large)
-| W2V2-Fr-M-*base*   |   19.47 | 6.98 | 1.87 | 0.63 | 18.32 | 6.37 | 1.99 | 0.54 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base)
-| W2V2-Fr-M-*large*  |   20.17 | **9.35** | **7.72** | 1.58 | 19.35 | **6.76** | **6.63** | 1.63 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large)
-| W2V2-Fr-VP-*base*  |   18.44 | 0.81 | 0.45 | 0.56 | 17.40 | 0.89 | 0.58 | 0.75 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_base_fr.pt)
-| W2V2-Fr-VP-*large* |   20.72 | 7.43 | 4.66 | 0.43 | 19.88 | 5.39 | 3.62 | 0.49 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_large_fr.pt)
-| XLSR-53-*large*    |   20.54 | 0.59 | 0.41 | 0.49 | 19.93 | 0.44 | 0.62 | 0.29 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt)
+| Input features     | fr-en | fr-en | fr-es | fr-pt | fr-en | fr-en | fr-es | fr-pt | Link|
+| -----              | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | --- |
+| MFB                |   **23.37** | 1.14 | 0.84 | 0.49 | **22.66** | 1.33 | 0.98 | 0.68 | |
+| W2V2-En-*base*     |   19.24 | 0.90 | 0.65 | 0.43 | 18.19 | 0.88 | 0.34 | 0.27 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt) |
+| W2V2-En-*large*    |   17.07 | 0.75 | 0.61 | 0.45 | 16.45 | 0.85 | 0.67 | 0.32 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt) |
+| W2V2-Fr-S-*base*   |   19.86 | 2.64 | 0.49 | 0.50 | 19.04 | 1.66 | 0.67 | 0.61 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-S-base) |
+| W2V2-Fr-S-*large*  |   19.62 | 5.12 | 4.62 | **2.06** | 18.61 | 2.97 | 3.19 | **2.25** | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-S-large) |
+| W2V2-Fr-M-*base*   |   19.47 | 6.98 | 1.87 | 0.63 | 18.32 | 6.37 | 1.99 | 0.54 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base) |
+| W2V2-Fr-M-*large*  |   20.17 | **9.35** | **7.72** | 1.58 | 19.35 | **6.76** | **6.63** | 1.63 | [Download](https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large) |
+| W2V2-Fr-VP-*base*  |   18.44 | 0.81 | 0.45 | 0.56 | 17.40 | 0.89 | 0.58 | 0.75 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_base_fr.pt) |
+| W2V2-Fr-VP-*large* |   20.72 | 7.43 | 4.66 | 0.43 | 19.88 | 5.39 | 3.62 | 0.49 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_large_fr.pt) |
+| XLSR-53-*large*    |   20.54 | 0.59 | 0.41 | 0.49 | 19.93 | 0.44 | 0.62 | 0.29 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt) | -->
 
 
 ## Datasets
