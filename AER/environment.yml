@@ -1,0 +1,59 @@
+name: emotionCampaign1
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - blas=1.0=mkl
+  - ca-certificates=2020.10.14=0
+  - certifi=2020.6.20=py38_0
+  - cudatoolkit=10.2.89=hfd86e86_1
+  - intel-openmp=2020.2=254
+  - ld_impl_linux-64=2.33.1=h53a641e_7
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=9.1.0=hdf63c60_0
+  - libstdcxx-ng=9.1.0=hdf63c60_0
+  - mkl=2020.2=256
+  - mkl-service=2.3.0=py38he904b0f_0
+  - mkl_fft=1.3.0=py38h54f3939_0
+  - mkl_random=1.1.1=py38h0573a6f_0
+  - ncurses=6.2=he6710b0_1
+  - ninja=1.10.2=py38hff7bd54_0
+  - numpy=1.19.2=py38h54aff64_0
+  - numpy-base=1.19.2=py38hfa32c7d_0
+  - openssl=1.1.1j=h27cfd23_0
+  - pandas=1.1.3=py38he6710b0_0
+  - pip=21.0.1=py38h06a4308_0
+  - pydub=0.25.1=pyhd8ed1ab_0
+  - python=3.8.8=hdb3f193_4
+  - python-dateutil=2.8.1=py_0
+  - python_abi=3.8=1_cp38
+  - pytorch=1.6.0=py3.8_cuda10.2.89_cudnn7.6.5_0
+  - pytz=2020.1=py_0
+  - readline=8.1=h27cfd23_0
+  - setuptools=52.0.0=py38h06a4308_0
+  - six=1.15.0=py38h06a4308_0
+  - sqlite=3.35.2=hdfb4753_0
+  - tk=8.6.10=hbc83047_0
+  - wheel=0.36.2=pyhd3eb1b0_0
+  - xz=5.2.5=h7b6447c_0
+  - zlib=1.2.11=h7b6447c_3
+  - pip:
+    - antlr4-python3-runtime==4.8
+    - cffi==1.14.5
+    - cython==0.29.22
+    - future==0.18.2
+    - hydra-core==1.0.6
+    - importlib-resources==5.1.2
+    - omegaconf==2.0.6
+    - portalocker==2.0.0
+    - pycparser==2.20
+    - pyyaml==5.4.1
+    - regex==2021.3.17
+    - sacrebleu==1.5.1
+    - tqdm==4.59.0
+    - typing-extensions==3.7.4.3
+prefix: /home/getalp/alisamis/anaconda3/envs/emotionCampaign1
+
