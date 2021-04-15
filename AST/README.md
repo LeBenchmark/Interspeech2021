@@ -2,8 +2,7 @@
 
 We describe the steps to reproduce our AST results presented in the paper (Section 5.3).  
 
-The following table (corresponding to Table 5 in the paper) shows the results using different speech features on the dev/valid and test sets of CoVoST-2 and multilingual TEDx where `MFB` means log Mel filterbank, `W2V2` denotes wav2vec models trained on monolingual speech, and `XLSR-53` is the multilingual wav2vec model trained on [53 languages](https://arxiv.org/abs/2006.13979). Except for the 4 models named `W2V2-Fr-S/M` whhich are the ones that we trained on our collected datasets, all remaining models are off-the-shelf ones that we obtained from previous work.
-
+The following table (corresponding to Table 5 in the paper) shows the results using different speech features on the dev/valid and test sets of CoVoST-2 and multilingual TEDx.
 
 <table>
   <thead>
@@ -177,6 +176,7 @@ The following table (corresponding to Table 5 in the paper) shows the results us
 | W2V2-Fr-VP-*large* |   20.72 | 7.43 | 4.66 | 0.43 | 19.88 | 5.39 | 3.62 | 0.49 | [Download](https://dl.fbaipublicfiles.com/voxpopuli/models/wav2vec2_large_fr.pt) |
 | XLSR-53-*large*    |   20.54 | 0.59 | 0.41 | 0.49 | 19.93 | 0.44 | 0.62 | 0.29 | [Download](https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt) | -->
 
+`MFB` means log Mel filterbank, `W2V2` denotes wav2vec models trained on monolingual speech, and `XLSR-53` is the multilingual wav2vec model trained on [53 languages](https://arxiv.org/abs/2006.13979). Except for the 4 models named `W2V2-Fr-S/M` which are the ones that we trained on our collected datasets, all remaining models are off-the-shelf ones that we obtained from previous work.
 
 ## Datasets
 We selected subsets having French as the source language in two large multilingual speech corpora: CoVoST-2 and multilingual TEDx. 
