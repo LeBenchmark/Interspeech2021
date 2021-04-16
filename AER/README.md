@@ -110,6 +110,8 @@ python Experimenter.py -j "[predefined_path]/experiments.json"
 <a name="Results"></a>
 ## Results
 
+The table below represents the results of the experiments. The numbers are Concordance Correlation Coefficient (CCC) of emotion predictions on the RECOLA and AlloSat test sets.
+
 <table>
   <thead>
     <tr>
