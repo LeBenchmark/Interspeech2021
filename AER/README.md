@@ -8,6 +8,7 @@
     * [Mel Filter Bank (MFB) Features](#MFB)
     * [Wav2vec Features](#Wav2vec)
   * [Running Experiments](#Experiments)
+  * [Results](#Results)
 
 
 <a name="Requirements"></a>
@@ -106,3 +107,100 @@ This will produce a `experiments.json` file that has the information needed to r
 python Experimenter.py -j "[predefined_path]/experiments.json"
 ```
 
+<a name="Results"></a>
+## Results
+
+<table>
+  <thead>
+    <tr>
+      <th colspan="2">Corpus</th>
+      <th colspan="2">RECOLA</th>
+      <th colspan="1">AlloSat</th>
+    </tr>
+  </thead>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Feature</th>
+      <th>Arousal</th>
+      <th>Valence</th>
+      <th>Satisfaction</th>
+    </tr>
+  </thead>
+  
+  <tbody>
+   <tr>
+    <td>Linear-Tanh</td>
+    <td>MFB</td>
+    <td>.192</td>
+    <td>.075</td>
+    <td>.065</td>
+   </tr>
+   <tr>
+    <td>Linear-Tanh</td>
+    <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base>W2V2-Fr-M-base</a></td>
+    <td><b>.385</td>
+    <td><b>.090</td>
+    <td><b>.193</td>
+   </tr>
+   <tr>
+    <td>Linear-Tanh</td>
+    <td><a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt>XLSR-53-large</a></td>
+    <td>.155</td>
+    <td>.024</td>
+    <td>.093</td>
+    
+   </tr>
+   <tr style="border-bottom:1px solid black">
+    <td colspan="100%"></td>
+   </tr>
+   
+   <tr>
+    <td>GRU-32</td>
+    <td>MFB</td>
+    <td>.654</td>
+    <td>.252</td>
+    <td>.437</td>
+   </tr>
+   <tr>
+    <td>GRU-32</td>
+    <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base>W2V2-Fr-M-base</a></td>
+    <td><b>.767</td>
+    <td><b>.376</td>
+    <td><b>.507</td>
+   </tr>
+   <tr>
+    <td>GRU-32</td>
+    <td><a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt>XLSR-53-large</a></td>
+    <td>.605</td>
+    <td>.320</td>
+    <td>.446</td>
+ 
+   </tr>
+   <tr style="border-bottom:1px solid black">
+    <td colspan="100%"></td>
+   </tr>
+
+   <tr>
+    <td>GRU-64</td>
+    <td>MFB</td>
+    <td>.712</td>
+    <td>.307</td>
+    <td>.400</td>
+   </tr>
+   <tr>
+    <td>GRU-64</td>
+    <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-base>W2V2-Fr-M-base</a></td>
+    <td><b>.760</td>
+    <td><b>.352</td>
+    <td><b>.507</td>
+   </tr>
+   <tr>
+    <td>GRU-64</td>
+    <td><a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt>XLSR-53-large</a></td>
+    <td>.585</td>
+    <td>.280</td>
+    <td>.434</td>
+   
+  </tbody>
+</table>
