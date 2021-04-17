@@ -60,16 +60,16 @@ For more details please see the [Interspeech 2021 paper (link coming soon)](?).
       </tr>
     </thead>
     <tr>
-      <td> Kheops+Basic </td> <td> W2V2-Fr-S base </td> <td> 23.11 </td> <td> 25.22 </td>
+      <td> Kheops+Basic </td> <td> W2V2-Fr-S-base </td> <td> 23.11 </td> <td> 25.22 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic </td> <td> W2V2-Fr-S large </td> <td> 18.48 </td> <td> 19.92 </td>
+      <td> Kheops+Basic </td> <td> W2V2-Fr-S-large </td> <td> 18.48 </td> <td> 19.92 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic </td> <td> W2V2-Fr-M base </td> <td> 14.97 </td> <td> 16.37 </td>
+      <td> Kheops+Basic </td> <td> W2V2-Fr-M-base </td> <td> 14.97 </td> <td> 16.37 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic </td> <td> W2V2-Fr-M large </td> <td> <b>11.77</b> </td> <td> <b>12.85</b> </td>
+      <td> Kheops+Basic </td> <td> W2V2-Fr-M-large </td> <td> <b>11.77</b> </td> <td> <b>12.85</b> </td>
     </tr>
     <thead>
       <tr>
@@ -142,28 +142,28 @@ For more details please see the [Interspeech 2021 paper (link coming soon)](?).
       </tr>
     </thead>
     <tr>
-      <td> Kheops+Basic +token </td> <td> W2V2-Fr-S base </td> <td> 27.18 </td> <td> 28.27 </td>
+      <td> Kheops+Basic +token </td> <td> W2V2-Fr-S-base </td> <td> 27.18 </td> <td> 28.27 </td>
     </tr>
     <tr>
-      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-S base </td> <td> 26.16 </td> <td> 26.69 </td>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-S-base </td> <td> 26.16 </td> <td> 26.69 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic +token </td> <td> W2V2-Fr-S large </td> <td> 23.34 </td> <td> 23.75 </td>
+      <td> Kheops+Basic +token </td> <td> W2V2-Fr-S-large </td> <td> 23.34 </td> <td> 23.75 </td>
     </tr>
     <tr>
-      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-S large </td> <td> 22.53 </td> <td> 23.03 </td>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-S-large </td> <td> 22.53 </td> <td> 23.03 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic +token </td> <td> W2V2-Fr-M base </td> <td> 22.11 </td> <td> 21.30 </td>
+      <td> Kheops+Basic +token </td> <td> W2V2-Fr-M-base </td> <td> 22.11 </td> <td> 21.30 </td>
     </tr>
     <tr>
-      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-M base </td> <td> 22.56 </td> <td> 22.24 </td>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-M-base </td> <td> 22.56 </td> <td> 22.24 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic +token </td> <td> W2V2-Fr-M large </td> <td> 21.72 </td> <td> 21.35 </td>
+      <td> Kheops+Basic +token </td> <td> W2V2-Fr-M-large </td> <td> 21.72 </td> <td> 21.35 </td>
     </tr>
     <tr>
-      <td> Kheops+LSTM +SLU </td> <td> W2V2-large-M </td> <td> <b>18.54</b> </td> <td> <b>18.62</b> </td>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-Fr-M-large </td> <td> <b>18.54</b> </td> <td> <b>18.62</b> </td>
     </tr>
     <thead>
       <tr>
