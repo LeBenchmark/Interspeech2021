@@ -21,7 +21,14 @@ The decoder is similar to the one used in our previous work published at [ICASSP
   
   <tbody>
     <tr>
-      <td> Kheops+Basic </td> <td> Spectrogram </td> <td> xx.xx </td> <td> xx.xx </td>
+      <td> Kheops+Basic </td> <td> Spectrogram </td> <td> 36.25 </td> <td> 37.16 </td>
+      <td> Kheops+Basic </td> <td> W2V2 En base </td> <td> 19.80 </td> <td> 21.78 </td>
+      <td> Kheops+Basic </td> <td> W2V2 En large </td> <td> 24.44 </td> <td> 26.96 </td>
+      <td> Kheops+Basic </td> <td> W2V2-S Fr base </td> <td> 23.11 </td> <td> 25.22 </td>
+      <td> Kheops+Basic </td> <td> W2V2-S Fr large </td> <td> 18.48 </td> <td> 19.92 </td>
+      <td> Kheops+Basic </td> <td> W2V2-M Fr base </td> <td> 14.97 </td> <td> 16.37 </td>
+      <td> Kheops+Basic </td> <td> W2V2-M Fr large </td> <td> 11.77 </td> <td> 12.85 </td>
+      <td> Kheops+Basic </td> <td> XLSR53 large </td> <td> 14.98 </td> <td> 15.74 </td>
     </tr>
   </tbody>
   
