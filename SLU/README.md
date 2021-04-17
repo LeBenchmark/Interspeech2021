@@ -122,7 +122,6 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+LSTM +SLU </td> <td> W2V2-S Fr large </td> <td> 22.53 </td> <td> 23.03 </td>
     </tr>
-  
     <tr>
       <td> Kheops+Basic +token </td> <td> W2V2-M Fr base </td> <td> 22.11 </td> <td> 21.30 </td>
     </tr>
@@ -135,13 +134,11 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+LSTM +SLU </td> <td> W2V2-M Fr large </td> <td> <b>18.54</b> </td> <td> <b>18.62</b> </td>
     </tr>
-    
     <thead>
       <tr>
         <th colspan="4"> </th>
       </tr>
     </thead>
-    
     <tr>
       <td> Kheops+Basic +token </td> <td> XLSR53 large </td> <td> 21.00 </td> <td> 20.67 </td>
     </tr>
