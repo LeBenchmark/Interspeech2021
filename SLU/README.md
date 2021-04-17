@@ -8,8 +8,9 @@ The decoder is similar to the one used in our previous work published at [ICASSP
 
 We use a similar training strategy as in [our previous work](http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf).
 We train thus the encoder alone first, by putting a simple decoder (Basic) on top of it, that is a linear layer mapping the encoder hidden states into the output vocabulary size. The pre-trained encoders are used to pre-initialize parameters of models using a LSTM decoder (LSTM).
-Results obtained with this strategy are summarized in the following table.
-For more details please see the [Interspeech 2021 paper](?).
+Models with a Basic decoder and trained for decoding tokens (ASR) are used to pre-initialize models with a Basic decoder trained for SLU.
+Results obtained with this strategy are summarized in the following table, we give both token decoding (ASR) and concept decoding (SLU) results.
+For more details please see the [Interspeech 2021 paper (link coming soon)](?).
 
 <center>
 <table>
