@@ -26,6 +26,19 @@ For more details please see the [Interspeech 2021 paper](?).
   </thead>
   
   <tbody>
+    <thead>
+      <tr>
+        <th colspan="4"> Comparison to our previous work </th>
+      </tr>
+    </thead>
+    <tr>
+      <td> [ICASSP 2020](http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf) </td> <td> Spectrogram </td> <td> 36.25 </td> <td> 37.16 </td>
+    </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
     <tr>
       <td> Kheops+Basic </td> <td> Spectrogram </td> <td> 36.25 </td> <td> 37.16 </td>
     </tr>
