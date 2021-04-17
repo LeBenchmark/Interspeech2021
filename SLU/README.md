@@ -39,6 +39,11 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+Basic </td> <td> W2V2 En large </td> <td> 24.44 </td> <td> 26.96 </td>
     </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
     <tr>
       <td> Kheops+Basic </td> <td> W2V2-S Fr base </td> <td> 23.11 </td> <td> 25.22 </td>
     </tr>
@@ -51,6 +56,11 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+Basic </td> <td> W2V2-M Fr large </td> <td> <b>11.77</b> </td> <td> <b>12.85</b> </td>
     </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
     <tr>
       <td> Kheops+Basic </td> <td> XLSR53 large </td> <td> 14.98 </td> <td> 15.74 </td>
     </tr>
@@ -78,12 +88,18 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+LSTM +SLU </td> <td> Spectrogram </td> <td> 33.63 </td> <td> 34.76 </td>
     </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
     <tr>
       <td> Kheops+Basic +token </td> <td> W2V2 En base </td> <td> 26.79 </td> <td> 26.57 </td>
     </tr>
     <tr>
       <td> Kheops+LSTM +SLU </td> <td> W2V2 En base </td> <td> 26.31 </td> <td> 26.11 </td>
     </tr>
+    
   </tbody>
   
  </table>
