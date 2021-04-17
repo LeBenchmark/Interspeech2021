@@ -52,7 +52,7 @@ For more details please see the [Interspeech 2021 paper (link coming soon)](?).
       <td> Kheops+Basic </td> <td> <a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt>W2V2-En-base</a> </td> <td> 19.80 </td> <td> 21.78 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic </td> <td> W2V2-En-large </td> <td> 24.44 </td> <td> 26.96 </td>
+      <td> Kheops+Basic </td> <td> <a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt>W2V2-En-large</a> </td> <td> 24.44 </td> <td> 26.96 </td>
     </tr>
     <thead>
       <tr>
@@ -131,10 +131,10 @@ For more details please see the [Interspeech 2021 paper (link coming soon)](?).
       <td> Kheops+LSTM +SLU </td> <td> <a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/wav2vec_small.pt>W2V2-En-base</a> </td> <td> 26.31 </td> <td> 26.11 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic +token </td> <td> W2V2-En-large </td> <td> 29.31 </td> <td> 30.39 </td>
+      <td> Kheops+Basic +token </td> <td> <a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt>W2V2-En-large</a> </td> <td> 29.31 </td> <td> 30.39 </td>
     </tr>
     <tr>
-      <td> Kheops+LSTM +SLU </td> <td> W2V2-En-large </td> <td> 28.38 </td> <td> 28.57 </td>
+      <td> Kheops+LSTM +SLU </td> <td> <a href=https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt>W2V2-En-large</a> </td> <td> 28.38 </td> <td> 28.57 </td>
     </tr>
     <thead>
       <tr>
