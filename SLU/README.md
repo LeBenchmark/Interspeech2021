@@ -184,7 +184,16 @@ For more details please see the [Interspeech 2021 paper (link coming soon)](?).
 
 # Installation
 
-Coming soon...
+The system was developped under **python 3.7, pytorch 1.4.0 and Fairseq 0.9**, it can probably work with other version of python and pytorch, but it will not work for sure under Fariseq 0.10. We are currently working for updating the code for the latest version of Fairseq (if you are in the hurry to use the system contact me, modofications do not take much time...).
+Once you have a running installation of Fairseq, you just have to copy files in the correct directories:
+
+- **End2EndSLU.py** in fairseq/tasks/
+- **End2EndSLUDataset.py** in fairseq/data/
+- **End2EndSLUModels.py** in fairseq/models/
+- **SLU_CTC_loss.py** in examples/speech_recognition/criterions/ (Fairseq 0.9)
+- **globals.py** in fairseq/
+
+**compute_error_rate.py** is used from command line (see Usage below) to compute the error rate on the model output.
 
 # Usage
 
