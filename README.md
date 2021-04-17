@@ -12,7 +12,7 @@ Our benchmark tasks are available on the following directories:
 
 ASR: Automatic Speech Recognition
 
-SLU: Spoken Language Understanding
+[SLU: Spoken Language Understanding](https://github.com/LeBenchmark/Interspeech2021/tree/main/SLU)
 
 AER: Automatic Emotion Recognition
 
