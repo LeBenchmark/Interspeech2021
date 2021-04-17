@@ -28,6 +28,11 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+Basic </td> <td> Spectrogram </td> <td> 36.25 </td> <td> 37.16 </td>
     </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
     <tr>
       <td> Kheops+Basic </td> <td> W2V2 En base </td> <td> 19.80 </td> <td> 21.78 </td>
     </tr>
