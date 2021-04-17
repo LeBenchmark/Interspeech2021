@@ -32,7 +32,7 @@ For more details please see the [Interspeech 2021 paper](?).
       </tr>
     </thead>
     <tr>
-      <td> <a href ="http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf">ICASSP 2020</a> </td> <td> Spectrogram </td> <td> 36.25 </td> <td> 37.16 </td>
+      <td> <a href ="http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf">ICASSP 2020 Seq</a> </td> <td> Spectrogram </td> <td> 29.42 </td> <td> 28.71 </td>
     </tr>
     <thead>
       <tr>
@@ -93,6 +93,22 @@ For more details please see the [Interspeech 2021 paper](?).
   </thead>
   
   <tbody>
+    <thead>
+      <tr>
+        <th colspan="4"> Comparison to our previous work </th>
+      </tr>
+    </thead>
+    <tr>
+      <td> <a href ="http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf">ICASSP 2020 Seq</a> </td> <td> Spectrogram </td> <td> 28.11 </td> <td> 27.52 </td>
+    </tr>
+    <tr>
+      <td> <a href ="http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf">ICASSP 2020 XT</a> </td> <td> Spectrogram </td> <td> 23.39 </td> <td> 24.02 </td>
+    </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> Interspeech 2021 </th>
+      </tr>
+    </thead>
     <tr>
       <td> Kheops+Basic </td> <td> Spectrogram </td> <td> 39.66 </td> <td> 40.76 </td>
     </tr>
