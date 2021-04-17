@@ -182,3 +182,14 @@ For more details please see the [Interspeech 2021 paper (link coming soon)](?).
  </table>
 </center>
 
+# Installation
+
+Coming soon...
+
+# Usage
+
+Coming soon...
+
+# Citation
+
+Coming soon...
