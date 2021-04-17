@@ -27,7 +27,7 @@ The decoder is similar to the one used in our previous work published at [ICASSP
   
   <thead>
     <tr>
-      <th colspan="4"> Token decoding (Word Error Rate)</th>
+      <th colspan="4"> Concept decoding (Concept Error Rate)</th>
     </tr>  
     <tr>
       <th> Model </th>
@@ -36,5 +36,11 @@ The decoder is similar to the one used in our previous work published at [ICASSP
       <th> TEST ER </th>
     </tr>
   </thead>
+  
+  <tbody>
+    <tr>
+      <td> Kheops+Basic </td> <td> Spectrogram </td> <td> xx.xx </td> <td> xx.xx </td>
+    </tr>
+  </tbody>
   
  </table>
