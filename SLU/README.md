@@ -99,6 +99,55 @@ For more details please see the [Interspeech 2021 paper](?).
     <tr>
       <td> Kheops+LSTM +SLU </td> <td> W2V2 En base </td> <td> 26.31 </td> <td> 26.11 </td>
     </tr>
+    <tr>
+      <td> Kheops+Basic +token </td> <td> W2V2 En large </td> <td> 29.31 </td> <td> 30.39 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2 En large </td> <td> 28.38 </td> <td> 28.57 </td>
+    </tr>
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
+    <tr>
+      <td> Kheops+Basic +token </td> <td> W2V2-S Fr base </td> <td> 27.18 </td> <td> 28.27 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-S Fr base </td> <td> 26.16 </td> <td> 26.69 </td>
+    </tr>
+    <tr>
+      <td> Kheops+Basic +token </td> <td> W2V2-S Fr large </td> <td> 23.34 </td> <td> 23.75 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-S Fr large </td> <td> 22.53 </td> <td> 23.03 </td>
+    </tr>
+  
+    <tr>
+      <td> Kheops+Basic +token </td> <td> W2V2-M Fr base </td> <td> 22.11 </td> <td> 21.30 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-M Fr base </td> <td> 22.56 </td> <td> 22.24 </td>
+    </tr>
+    <tr>
+      <td> Kheops+Basic +token </td> <td> W2V2-M Fr large </td> <td> 21.72 </td> <td> 21.35 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2-M Fr large </td> <td> <b>18.54</b> </td> <td> <b>18.62</b> </td>
+    </tr>
+    
+    <thead>
+      <tr>
+        <th colspan="4"> </th>
+      </tr>
+    </thead>
+    
+    <tr>
+      <td> Kheops+Basic +token </td> <td> XLSR53 large </td> <td> 21.00 </td> <td> 20.67 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> XLSR53 large </td> <td> 20.34 </td> <td> 19.73 </td>
+    </tr>
     
   </tbody>
   
