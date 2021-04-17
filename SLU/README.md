@@ -39,7 +39,7 @@ The decoder is similar to the one used in our previous work published at [ICASSP
       <td> Kheops+Basic </td> <td> W2V2-M Fr base </td> <td> 14.97 </td> <td> 16.37 </td>
     </tr>
     <tr>
-      <td> Kheops+Basic </td> <td> W2V2-M Fr large </td> <td> 11.77 </td> <td> 12.85 </td>
+      <td> Kheops+Basic </td> <td> W2V2-M Fr large </td> <td> <b>11.77</b> </td> <td> <b>12.85</b> </td>
     </tr>
     <tr>
       <td> Kheops+Basic </td> <td> XLSR53 large </td> <td> 14.98 </td> <td> 15.74 </td>
