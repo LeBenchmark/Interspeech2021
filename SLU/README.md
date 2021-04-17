@@ -6,6 +6,11 @@ The system used is based on Sequence-to-Sequence models and is coded for the [Fa
 The encoder is similar to the pyramidal LSTM-based encoder proposed in the [Listen, attend and spell paper](https://arxiv.org/abs/1508.01211), the only difference is that we compute the mean of two consecutive hidden states for reducing the output size between two layers, instead of concatenating them like in the original model.
 The decoder is similar to the one used in our previous work published at [ICASSP 2020](http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf). The differences in this case are that we use two attention mechanisms, one for attending the encoder hidden states, and the other for attending all the previous predictions, instead of using only the previous one like in the original decoder.
 
+We use a similar training strategy as in [our previous work](http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf).
+We train thus the encoder alone first, by putting a simple decoder (Basic) on top of it, that is a linear layer mapping the encoder hidden states into the output vocabulary size. The pre-trained encoders are used to pre-initialize parameters of models using a LSTM decoder (LSTM).
+Results obtained with this strategy are summarized in the following table.
+For more details please see the [Interspeech 2021 paper](?).
+
 <table>
   <thead>
     <tr>
@@ -60,7 +65,19 @@ The decoder is similar to the one used in our previous work published at [ICASSP
   
   <tbody>
     <tr>
-      <td> Kheops+Basic </td> <td> Spectrogram </td> <td> xx.xx </td> <td> xx.xx </td>
+      <td> Kheops+Basic </td> <td> Spectrogram </td> <td> 39.66 </td> <td> 40.76 </td>
+    </tr>
+    <tr>
+      <td> Kheops+Basic +token </td> <td> Spectrogram </td> <td> 34.38 </td> <td> 34.74 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> Spectrogram </td> <td> 33.63 </td> <td> 34.76 </td>
+    </tr>
+    <tr>
+      <td> Kheops+Basic +token </td> <td> W2V2 En base </td> <td> 26.79 </td> <td> 26.57 </td>
+    </tr>
+    <tr>
+      <td> Kheops+LSTM +SLU </td> <td> W2V2 En base </td> <td> 26.31 </td> <td> 26.11 </td>
     </tr>
   </tbody>
   
