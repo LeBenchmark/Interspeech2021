@@ -24,4 +24,17 @@ The decoder is similar to the one used in our previous work published at [ICASSP
       <td> Kheops+Basic </td> <td> Spectrogram </td> <td> xx.xx </td> <td> xx.xx </td>
     </tr>
   </tbody>
+  
+  <thead>
+    <tr>
+      <th colspan="4"> Token decoding (Word Error Rate)</th>
+    </tr>  
+    <tr>
+      <th> Model </th>
+      <th> Input Features </th>
+      <th> DEV ER </th>
+      <th> TEST ER </th>
+    </tr>
+  </thead>
+  
  </table>
