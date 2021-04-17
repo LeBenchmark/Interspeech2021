@@ -76,7 +76,7 @@ if [[ $# -ge 1 ]]; then
 	LR=$1
 fi
 
-SAVE_PATH=${corpus}_Kheops-${DECODER}_${SUBTASK}_Loss${CRITERION}/
+SAVE_PATH=${CORPUS}_Kheops-${DECODER}_${SUBTASK}_Loss${CRITERION}/
 if [[ $# -ge 2 ]]; then
 	SAVE_PATH=${2}_LR${LR}/
 fi
