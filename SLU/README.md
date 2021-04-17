@@ -11,6 +11,7 @@ We train thus the encoder alone first, by putting a simple decoder (Basic) on to
 Results obtained with this strategy are summarized in the following table.
 For more details please see the [Interspeech 2021 paper](?).
 
+<center>
 <table>
   <thead>
     <tr>
@@ -149,3 +150,5 @@ For more details please see the [Interspeech 2021 paper](?).
   </tbody>
   
  </table>
+</center>
+
