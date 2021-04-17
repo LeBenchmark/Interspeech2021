@@ -9,8 +9,8 @@ The decoder is similar to the one used in our previous work published at [ICASSP
 <table>
   <thead>
     <tr>
-      <th Model </th>
-      <th Input Features </th>
+      <th> Model </th>
+      <th> Input Features </th>
       <th> DEV ER </th>
       <th> TEST ER </th>
     </tr>
