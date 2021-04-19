@@ -14,7 +14,7 @@ Our benchmark tasks are available on the following directories:
 
 [SLU: Spoken Language Understanding](https://github.com/LeBenchmark/Interspeech2021/tree/main/SLU)
 
-AER: Automatic Emotion Recognition
+[AER: Automatic Emotion Recognition](https://github.com/LeBenchmark/Interspeech2021/tree/main/AER)
 
 [AST: Automatic Speech Translation](https://github.com/LeBenchmark/Interspeech2021/tree/main/AST)
 
