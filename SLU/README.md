@@ -210,6 +210,11 @@ Pay attention to the option **--slu-subtask**: with a value **'token'** you will
 In order to train a model with a LSTM decoder (the version of LSTM decoder described above), run the script **run_end2end_slu_train_icassplstm.sh** (again, you need to modify environment variables in the script so that to match your installation, your home, etc. on your machine).
 In this script also you need to set properly the option **--slu-subtask**:
 
+In order to train a model pre-initializing parameters with previously trained model, use the option:
+```--load-fairseq-encoder <model file>```
+
+This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder is the same in the instantiated and loaded models, and in that case it pre-initialize also the decoder.
+
 # Citation
 
 Coming soon...
