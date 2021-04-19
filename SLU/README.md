@@ -215,7 +215,7 @@ In order to train a model pre-initializing parameters with previously trained mo
 
 This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder's type is the same in the instantiated and loaded models, and in that case it pre-initializes also the decoder.
 
-At the first run, the system will read data and save them in a serialized format, containing all the tensors needed for training (and generation). At following runs you can use such data with the option **--serialized-corpus <data prefix>**. <data prefix> is the prefix in common to all the generated files (train, validation, test data plus the dictionary).
+At the first run, the system will read data and save them in a serialized format, containing all the tensors needed for training (and generation). At following runs you can use such data with the option **--serialized-corpus \<data prefix\>**. _\<data prefix\>_ is the prefix in common to all the generated files (train, validation, test data plus the dictionary).
 This makes data loading much faster, especially when using _wav2vec_ features as input. **I'm going to upload the features somewhere and made them available to reproduce the experiments described above**.
 
 # Citation
