@@ -213,7 +213,9 @@ In this script also you need to set properly the option **--slu-subtask**:
 In order to train a model pre-initializing parameters with previously trained model, use the option:
 ```--load-fairseq-encoder <model file>```
 
-This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder is the same in the instantiated and loaded models, and in that case it pre-initialize also the decoder.
+This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder's type is the same in the instantiated and loaded models, and in that case it pre-initializes also the decoder.
+
+At the first run, the system will read data and save them in a serialized version, containing all the tensors needed for training (and generation). At following runs the system will check if that serialized data exists, and in that case will load them. This makes data loading much faster, especially when using _wav2vec_ features as input. ** I'm going to upload the features somewhere and made them available to reproduce the experiments described above**.
 
 # Citation
 
