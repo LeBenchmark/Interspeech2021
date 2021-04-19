@@ -205,12 +205,13 @@ Coming soon...
 
 In order to train a model with a Basic decoder (a linear layer), run the script **run_end2end_slu_train_basic.sh** (you need to modify environment variables in the script so that to match your installation, your home, etc. on your machine).
 
-Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M C_M"> **EOC**, where **SOC** and **EOC** are start and end of concept markers, <img src="https://render.githubusercontent.com/render/math?math=w_1^i \dots w_N^i C_i"> are the words instantiating the concept <img src="https://render.githubusercontent.com/render/math?math=C_i">, followed by the concept itself.
+Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M C_M"> **EOC**.
+**SOC** and **EOC** are start and end of concept markers, <img src="https://render.githubusercontent.com/render/math?math=w_1^i \dots w_N^i C_i"> are the words instantiating the concept <img src="https://render.githubusercontent.com/render/math?math=C_i">, followed by the concept itself.
 
 In order to train a model with a LSTM decoder (the version of LSTM decoder described above), run the script **run_end2end_slu_train_icassplstm.sh** (again, you need to modify environment variables in the script so that to match your installation, your home, etc. on your machine).
 In this script also you need to set properly the option **--slu-subtask**:
 
-In order to train a model pre-initializing parameters with previously trained model, use the option:
+In order to train a model pre-initializing parameters with a previously trained model, use the option:
 ```--load-fairseq-encoder <model file>```
 
 This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder's type is the same in the instantiated and loaded models, and in that case it pre-initializes also the decoder.
