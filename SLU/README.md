@@ -199,7 +199,9 @@ Once you have a running installation of Fairseq, you just have to copy files in 
 
 ### Features generation
 
-Coming soon...
+I started uploading features [here](http://www.marcodinarelli.it/is2021.php), so that you don't need the original data or to extract features on your own.
+
+Updating soon...
 
 ### Training
 
