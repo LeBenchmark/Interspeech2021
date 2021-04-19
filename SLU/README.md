@@ -204,9 +204,7 @@ Coming soon...
 ### Training
 
 In order to train a model with a Basic decoder (a linear layer), run the script **run_end2end_slu_train_basic.sh** (you need to modify environment variables in the script so that to match your installation, you home, etc. on your machine).
-Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 ~~C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M ~~C_M"> **EOC**.
-
-<img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">
+Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M C_M"> **EOC**, where **SOC** and **EOC** are start and end of concept markers, <img src="https://render.githubusercontent.com/render/math?math=w_1^i \dots w_N^i C_i"> are the words instantiating the concept <img src="https://render.githubusercontent.com/render/math?math=C_i">, followed by the concept itself.
 
 # Citation
 
