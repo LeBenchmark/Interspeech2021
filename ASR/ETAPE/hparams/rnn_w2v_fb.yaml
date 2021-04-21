@@ -1,14 +1,13 @@
 # Seed needs to be set at top of yaml, before objects with parameters are made
 seed: 1242
 __set_seed: !!python/object/apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results/rnn_w2v_fb/<seed>
+output_folder: !ref results/rnn_w2v_fr/<seed>
 wer_file: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
 # Data files
-data_folder: /gpfsscratch/rech/nct/uzy98yt/data/ETAPE/data/ETAPE_data 
-#/gpfswork/rech/gcp/commun/new/data/hierarchie_medias/CSV_FR
+data_folder: !PLACEHOLDER 
 accented_letters: True
 language: fr # use 'it' for Italian, 'rw' for Kinyarwanda, 'en' for english
 train_csv: !ref <data_folder>/train.csv
@@ -119,7 +118,7 @@ compute_features: !new:speechbrain.lobes.features.Fbank
 #    f_max: !ref <f_max>
 
 wav2vec: !new:speechbrain.lobes.models.fairseq_wav2vec.FairseqWav2Vec2
-    pretrained_path: /gpfsscratch/rech/nct/uzy98yt/data/2952h_large_checkpoint_best.pt
+    pretrained_path: !PLACEHOLDER """/2952h_large_checkpoint_best.pt"""
     save_path: !ref <output_folder>/2952h_large_checkpoint_best.pt
 
 

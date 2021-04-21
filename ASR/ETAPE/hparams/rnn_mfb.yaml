@@ -1,30 +1,25 @@
 # Seed needs to be set at top of yaml, before objects with parameters are made
 seed: 1242
 __set_seed: !!python/object/apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results/rnn_w2v_fb/<seed>
+output_folder: !ref results/rnn_w2v_fr/<seed>
 wer_file: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
 # Data files
-data_folder: /gpfsscratch/rech/nct/uzy98yt/data/ETAPE/data/ETAPE_data 
-#/gpfswork/rech/gcp/commun/new/data/hierarchie_medias/CSV_FR
+data_folder: !PLACEHOLDER 
 accented_letters: True
 language: fr # use 'it' for Italian, 'rw' for Kinyarwanda, 'en' for english
 train_csv: !ref <data_folder>/train.csv
 valid_csv: !ref <data_folder>/dev.csv
 test_csv: !ref <data_folder>/test.csv
 
-# We remove utterance slonger than 8s in the train/dev/test sets as
-# longer sentences certainly correspond to "open microphones".
 avoid_if_longer_than: 20.0
 avoid_if_smaller_than: 0.1
 
 
 # Training parameters
-#50
 number_of_epochs: 100 
-#40
 number_of_ctc_epochs: 30
 lr: 1
 ctc_weight: 0.3
@@ -51,8 +46,6 @@ character_coverage: 1.0
 sample_rate: 16000
 n_fft: 400
 n_mels: 80
-#n_mels: 1024
-#n_mels: 768
 
 
 # Model parameters
