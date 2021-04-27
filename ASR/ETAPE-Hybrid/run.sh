@@ -101,6 +101,15 @@ fi
 
 # Extract wav2vec (2.0) features
 if [ $stage -le 10 ]; then
+  # TODO download a model for wav2vec feature extraction
+  # https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large          #French
+  # https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt  #English
+  # https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt   #Multi-lingual 
+  mkdir -p data/models
+  cd data/models 
+  wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt || exit 1  
+  cd ..
+  model=data/models/xlsr_53_56k.pt
   for dset in dev test train_cleaned_sp; do
 	$train_cmd --gpu 1 --num-threads 12 --time 24:00:00 data/${dset}_w2v/log/extract_wav2vec2.$dset.log \
 	python local/extract_wav2vec.py $model data/${dset} data/${dset}_w2v || exit 1 
