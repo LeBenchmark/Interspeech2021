@@ -3,14 +3,11 @@ Evaluation of SSL for hybrid DNN-HMM and end-to-end ASR models.
 
 
 ## Hybrid DNN-HMM models
-
-### Data
-ETAPE-1,2 - French TV broadcast programs – training: 22 h, development: 7 h, and test: 7 h
-
+[ETAPE-Hybrid](https://github.com/LeBenchmark/Interspeech2021/tree/main/ASR/ETAPE-Hybrid)
 
 
 ## End-to-end models
 
-### Data
-1. ETAPE-1,2 - French TV broadcast programs – training: 22 h development: 7 h, and test: 7 h
-2. Common Voice - 477 h of read speech in French
+[ETAPE-End-to-end](https://github.com/LeBenchmark/Interspeech2021/tree/main/ASR/ETAPE)
+
+[CommonVoice-End-to-end](https://github.com/LeBenchmark/Interspeech2021/tree/main/ASR/CommonVoice)
