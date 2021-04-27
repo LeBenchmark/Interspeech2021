@@ -1,5 +1,5 @@
 # Automatic Speech Recognition (ASR)
-Evaluation of the SSL contribution for ASR using a hybrid DNN-HMM and an end-to-end approaches.
+Evaluation of SSL for hybrid DNN-HMM and end-to-end ASR models.
 
 
 ## Hybrid DNN-HMM models
