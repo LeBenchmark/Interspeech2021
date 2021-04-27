@@ -9,15 +9,17 @@ set -e -o pipefail -u
 
 nj=40 
 decode_nj=10 
+max_nj=512
+mj=128
 
 stage=0
 
 . utils/parse_options.sh 
 
-if [ $stage -le 0 ]; then
+#if [ $stage -le 0 ]; then
   #TODO
   # download and prepare data: dev, test, train and lang for ETAPE-1,2
-fi 
+#fi 
 
 if [ $stage -le 1 ]; then
   for dset in dev test train; do
@@ -111,6 +113,7 @@ if [ $stage -le 10 ]; then
   cd ..
   model=data/models/xlsr_53_56k.pt
   for dset in dev test train_cleaned_sp; do
+    utils/copy_data_dir.sh $dset ${dset}_w2v
 	$train_cmd --gpu 1 --num-threads 12 --time 24:00:00 data/${dset}_w2v/log/extract_wav2vec2.$dset.log \
 	python local/extract_wav2vec.py $model data/${dset} data/${dset}_w2v || exit 1 
 fi
