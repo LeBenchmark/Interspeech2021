@@ -94,16 +94,19 @@ if [ $stage -le 8 ]; then
   local/run_cleanup_segmentation.sh || exit 1
 fi
 
+# Train a TDNN-F model on hires features
 if [ $stage -le 9 ]; then
   local/chain/run_tdnn_hires.sh || exit 1
 fi
 
+# Extract wav2vec (2.0) features
 if [ $stage -le 10 ]; then
   for dset in dev test train_cleaned_sp; do
 	$train_cmd --gpu 1 --num-threads 12 --time 24:00:00 data/${dset}_w2v/log/extract_wav2vec2.$dset.log \
-	python local/wav2vec_featurize.py $model data/${dset} data/${dset}_w2v || exit 1 
+	python local/extract_wav2vec.py $model data/${dset} data/${dset}_w2v || exit 1 
 fi
 
+# Train a TDNN-F model on wav2vec features using the same i-vectors and model topology
 if [ $stage -le 11 ]; then
   local/chain/run_tdnn_w2v.sh || exit 1
 fi
