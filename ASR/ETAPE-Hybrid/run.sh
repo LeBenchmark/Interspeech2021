@@ -113,7 +113,7 @@ if [ $stage -le 10 ]; then
   cd ..
   model=data/models/xlsr_53_56k.pt
   for dset in dev test train_cleaned_sp; do
-    utils/copy_data_dir.sh $dset ${dset}_w2v
+    utils/copy_data_dir.sh data/$dset data/${dset}_w2v
 	$train_cmd --gpu 1 --num-threads 12 --time 24:00:00 data/${dset}_w2v/log/extract_wav2vec2.$dset.log \
 	python local/extract_wav2vec.py $model data/${dset} data/${dset}_w2v || exit 1 
 fi
