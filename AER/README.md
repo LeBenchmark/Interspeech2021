@@ -4,7 +4,7 @@
   * [Requirements](#Requirements)
   * [Access to Datasets](#Access)
   * [Preprocessing Data](#Preprocessing)
-  * [Extracting features](#Features)
+  * [Features Extraction](#Features)
     * [Mel Filter Bank (MFB) Features](#MFB)
     * [Wav2vec Features](#Wav2vec)
   * [Running Experiments](#Experiments)
@@ -14,7 +14,7 @@
 <a name="Requirements"></a>
 ## Requirements
 
-To satisfy the requirements for running experiments please refer to environment.yml file,
+Dependencies required for running experiments can easily be prepared using the environment.yml file,
 
 ```bash
 conda env create -f environment.yml
@@ -27,7 +27,7 @@ Note: To extract `wav2vec` features using fairseq, the version used is "1.0.0a0+
 <a name="Access"></a>
 ## Access to Datasets
 
-Datasets used here were RECOLA and AlloSat, information regarding how to access them can be found below:
+Please follow the instructions given on the RECOLA and AlloSat websites in order to have access to data:
 
 RECOLA: https://diuf.unifr.ch/main/diva/recola/download.html
 
@@ -37,15 +37,15 @@ AlloSat: https://lium.univ-lemans.fr/en/allosat/
 <a name="Preprocessing"></a>
 ## Preprocessing Data
 
-The audio files in each dataset should first be preprocessed to be 16 KHz, mono channel and 16 bit single integer. In order to do that `Preprocess.py` file may be used, an example can be seen here:
+Audio files must be converted to 16 kHz, 16 bits single interger, mono channel to extract `wav2vec` representations. This can be achieved using the `Preprocess.py` script:
 
 ```bash
 python Preprocess.py --input "[path to datasets]/audio" --output "[path to datasets]/AlloSat/Wavs"
 ```
 
-Then, under `FeatureExtraction\DatasetHandling`, `Recola_46.py` and `Allosat.py` are files related to produce a `data.json` file that includes all the information needed regarding each dataset to run experiments. 
+Once done, descriptive json files need to be created in order to run experiments on the RECOLA and AlloSat datasets, using the `Recola_46.py` and `Allosat.py` scripts in `FeatureExtraction\DatasetHandling`. Each script produces a `data.json` file that includes all the information needed to run experiments on each dataset. 
 
-After all the preprocessing steps, they should be in the following format:
+Once those preprocessing steps achieved, the data structure should be as follows:
 
 ```
 . Datasets
@@ -59,24 +59,23 @@ After all the preprocessing steps, they should be in the following format:
 |	data.json
 ```
 
-Note: Please change the path inside each file to refer to the directory in which each dataset is stored.
+Note: Please make sure that the path given in each `data.json` file refers to the directory where datasets are stored.
 
-Note: Other preprocessing related files like changing the sampling frequency of the data can be found under `FeatureExtraction\DatasetHandling`.
-
+Note: Others audio preprocessing scripts can be found in `FeatureExtraction\DatasetHandling`.
 
 <a name="Features"></a>
-## Extracting features
+## Features extraction
 
 <a name="MFB"></a>
 ### Mel Filter Bank (MFB) Features
 
-To produce MFB features, the following code may be used:
+To produce MFB features, which serve as baseline, the following command can be used:
 
 ```bash
 python MelFilterBank.py -f "MFB" -j "[path_to_datasets]/Datasets/RECOLA/data.json"
 ```
 
-Then it should be followed by a standardisation step:
+Followed by a standardisation step:
 
 ```bash
 python Standardize.py -f MFB -j "[path_to_datasets]/Datasets/RECOLA/data.json"
@@ -85,7 +84,7 @@ python Standardize.py -f MFB -j "[path_to_datasets]/Datasets/RECOLA/data.json"
 <a name="Wav2vec"></a>
 ### Wav2vec Features
 
-An example code to produce Wav2vec features:
+Given a pre-trained model, Wav2vec features can be obtained using the following command:
 
 ```bash
 python wav2vec2.py -f "FlowBERT_2952h_base_cut30" -d 29.99 -n True -j "[path_to_datasets]/Datasets/RECOLA/data.json" -m "[path_to_wav2vec_models]/Models/FlowBERT_2952h_base.pt"
@@ -95,13 +94,13 @@ python wav2vec2.py -f "FlowBERT_2952h_base_cut30" -d 29.99 -n True -j "[path_to_
 <a name="Experiments"></a>
 ## Running Experiments
 
-In order to run experiments, first we need to define it. A script defining the preliminary experiments is provided under `Experiments` folder:
+To setup the experiments, a script defining the configurations shall be run first in the `Experiments` folder:
 
 ```bash
 python setupExp_RECOLA_AlloSat.py
 ```
 
-This will produce a `experiments.json` file that has the information needed to run a series of experiments. Then, the experiments can be run as follows: 
+This will produce a `experiments.json` file that contains all the information needed to reproduce the series of experiments presented in the paper, using the following command: 
 
 ```bash
 python Experimenter.py -j "[predefined_path]/experiments.json"
@@ -110,7 +109,7 @@ python Experimenter.py -j "[predefined_path]/experiments.json"
 <a name="Results"></a>
 ## Results
 
-The table below represents the results of the experiments. The numbers are Concordance Correlation Coefficient (CCC) of emotion predictions on the RECOLA and AlloSat test sets.
+Performance is evaluated with the Concordance Correlation Coefficient (CCC) as emotion recognition is performed on time- and value-continuous dimensions (arousal, valence - RECOLA, and satisfaction - AlloSat). The table below reproduces the results of the experiments on the test partition.
 
 <table>
   <thead>
