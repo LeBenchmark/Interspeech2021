@@ -109,9 +109,13 @@ if [ $stage -le 10 ]; then
   # https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt   #Multi-lingual 
   mkdir -p data/models
   cd data/models 
-  wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt || exit 1  
+  # wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt || exit 1  
+  git lfs install || exit 1
+  git clone https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large || exit 1
+  ln -s wav2vec2-FR-M-large/checkpoint_best.pt  wav2vec2-FR-M-large.pt
   cd ..
-  model=data/models/xlsr_53_56k.pt
+  #model=data/models/xlsr_53_56k.pt
+  model=data/models/wav2vec2-FR-M-large.pt
   for dset in dev test train_cleaned_sp; do
     utils/copy_data_dir.sh data/$dset data/${dset}_w2v
 	$train_cmd --gpu 1 --num-threads 12 --time 24:00:00 data/${dset}_w2v/log/extract_wav2vec2.$dset.log \
