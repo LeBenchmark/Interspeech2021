@@ -101,7 +101,7 @@ if [ $stage -le 9 ]; then
   local/chain/run_tdnn_hires.sh || exit 1
 fi
 
-# Extract wav2vec (2.0) features
+# Download models to extract wav2vec 2.0 features
 if [ $stage -le 10 ]; then
   # TODO download a model for wav2vec feature extraction
   # https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large          #French
@@ -109,23 +109,27 @@ if [ $stage -le 10 ]; then
   # https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt   #Multi-lingual 
   mkdir -p data/models
   cd data/models 
-  # wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt || exit 1  
+  wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt || exit 1  
   git lfs install || exit 1
   git clone https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large || exit 1
   ln -s wav2vec2-FR-M-large/checkpoint_best.pt  wav2vec2-FR-M-large.pt
   cd ..
-  #model=data/models/xlsr_53_56k.pt
+fi
+
+# Extract wav2vec 2.0 features
+if [ $stage -le 11 ]; then
   model=data/models/wav2vec2-FR-M-large.pt
+  # model=data/models/xlsr_53_56k.pt  
   for dset in dev test train_cleaned_sp; do
     utils/copy_data_dir.sh data/$dset data/${dset}_w2v
 	$train_cmd --gpu 1 --num-threads 12 --time 24:00:00 data/${dset}_w2v/log/extract_wav2vec2.$dset.log \
-	python local/extract_wav2vec.py $model data/${dset} data/${dset}_w2v || exit 1 
+	python local/extract_wav2vec.py $model data/${dset} data/${dset}_w2v || exit 1
+  done
 fi
 
 # Train a TDNN-F model on wav2vec features using the same i-vectors and model topology
-if [ $stage -le 11 ]; then
+if [ $stage -le 12 ]; then
   local/chain/run_tdnn_w2v.sh || exit 1
 fi
-
 echo "$0: success."
 exit 0
