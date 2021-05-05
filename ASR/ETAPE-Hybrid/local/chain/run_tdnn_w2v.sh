@@ -52,7 +52,7 @@ lat_dir=exp/chain${nnet3_affix}/${gmm}_${train_set}_sp_comb_lats
 dir=exp/chain${nnet3_affix}/tdnn${tdnn_affix}_sp_bi_w2v
 train_data_dir=data/${train_set}_sp_w2v_comb
 lores_train_data_dir=data/${train_set}_sp_comb
-train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_comb
+train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires_comb
 
 if [ $stage -le 17 ]; then
   mkdir -p $dir
