@@ -10,7 +10,7 @@ We use a similar training strategy as in [our previous work](http://www.marcodin
 We train thus the encoder alone first, by putting a simple decoder (Basic) on top of it, that is a linear layer mapping the encoder hidden states into the output vocabulary size. The pre-trained encoders are used to pre-initialize parameters of models using a LSTM decoder (LSTM).
 Models with a Basic decoder and trained for decoding tokens (ASR) are used to pre-initialize models with a Basic decoder trained for SLU.
 Results obtained with this strategy are summarized in the following table, we give both token decoding (ASR) and concept decoding (SLU) results.
-For more details please see the [Interspeech 2021 paper (link coming soon)](?).
+For more details please see the [paper submitted at Interspeech 2021](https://arxiv.org/abs/2104.11462).
 
 <center>
 <table>
