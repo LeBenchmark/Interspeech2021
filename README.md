@@ -8,6 +8,7 @@
   
   
 Our pre-trained SSL models for French are available through this HuggingFace link: https://huggingface.co/LeBenchmark
+
 Our benchmark tasks are available on the following directories:
 
 [ASR: Automatic Speech Recognition](https://github.com/LeBenchmark/Interspeech2021/tree/main/ASR)
@@ -18,5 +19,6 @@ Our benchmark tasks are available on the following directories:
 
 [AST: Automatic Speech Translation](https://github.com/LeBenchmark/Interspeech2021/tree/main/AST)
 
-(this page is still under construction)
+Detailed descriptions of experiments and results are given in on our paper: https://arxiv.org/pdf/2104.11462.pdf
 
+(this page is still under construction)
