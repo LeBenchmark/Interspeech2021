@@ -147,7 +147,7 @@ if [ $stage -le 20 ]; then
   for dset in dev test; do   
       steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
           --acwt 1.0 --post-decode-acwt 15.0 \
-          --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_w2v \
+          --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
           --scoring-opts "--min-lmwt 5 " \
          $dir/graph data/${dset}_w2v $dir/decode_${dset}.15 || exit 1;
 #      steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang data/lang_rescore \
