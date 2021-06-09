@@ -78,13 +78,11 @@ def classToDic(dic):
 
 def localizePaths(dic, mainPath): # Change this path to that path
     if isinstance(dic, dict):
-        # print("dict", dic)
         for key in dic.keys():
             if key == "path":
                 dic[key] = dic[key].replace(mainPath, ".")
                 dic[key] = dic[key].replace("./", "")
                 if dic[key][0] == ".": dic[key] = dic[key][1:]
-                # print(dic)
             else:
                 localizePaths(dic[key], mainPath)
     return dic
@@ -92,28 +90,10 @@ def localizePaths(dic, mainPath): # Change this path to that path
 
 def changePaths(dic, This, That): # Change this path to that path
     if isinstance(dic, dict):
-        # print("dict", dic)
         for key in dic.keys():
             if key == "path":
                 dic[key] = dic[key].replace(This, That)
-                # print(dic)
             else:
                 changePaths(dic[key], This, That)
     return dic
-    # elif isinstance(dic, str):
-    #     print(dic)
-    #     if dic == "path":
-            
-    # else:
-    #     return dic
-    
-
-# rater = PersonalInfo()
-# rater.setParams("iop","23","F","French")
-# annotation = Annotation()
-# annotation.setParams("test1","Arousal",[-1,3],"somewhere",rater)
-# print(annotation.annotator_info.language)
-
-# sample = AudioSample()
-# print(classToDic(sample.__dict__))
 
