@@ -21,4 +21,3 @@ Our benchmark tasks are available on the following directories:
 
 Detailed descriptions of experiments and results are given in on our paper: https://arxiv.org/pdf/2104.11462.pdf
 
-(this page is still under construction)
