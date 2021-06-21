@@ -1,7 +1,5 @@
 # Automatic Emotion Recognition
 
-[TOC]
-
 ## Requirements
 
 To satisfy the requirements for running experiments please refer to environment.yml file,
