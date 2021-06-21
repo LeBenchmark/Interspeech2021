@@ -51,4 +51,5 @@ python RECOLA_2016.py -w "[path_to_datasets]/RECOLA_2016/recordings_audio" -a "[
 ```
 
 **IMPORTANT NOTE**: The mentioned file only works with the version of RECOLA provided for AVEC_2016 challenges and it requires the `ratings_gold_standard` and `recordings_audio` to be under `[path_to_datasets]/RECOLA_2016`.
+
 **IMPORTANT NOTE**: Please keep the "wav2vec2" string in the feature name if adding other wav2vec2 features, since this is how the script knows to use wav2vec2 models to extract features.
