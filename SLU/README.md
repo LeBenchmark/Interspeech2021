@@ -2,7 +2,7 @@
 
 The SLU Benchmark used for the **LeBenchmark** is **MEDIA** ([See here for downloading input features](http://www.marcodinarelli.it/is2021.php)).
 
-The system used is based on Sequence-to-Sequence models and is coded for the [Fairseq library](https://github.com/pytorch/fairseq) (**updated code coming soon**).
+The system used is based on Sequence-to-Sequence models and is coded for the [Fairseq library](https://github.com/pytorch/fairseq).
 The encoder is similar to the pyramidal LSTM-based encoder proposed in the [Listen, attend and spell paper](https://arxiv.org/abs/1508.01211) (Kheops), the only difference is that we compute the mean of two consecutive hidden states for reducing the output size between two layers, instead of concatenating them like in the original model.
 The decoder is similar to the one used in our previous work published at [ICASSP 2020](http://www.marcodinarelli.it/publications/2020_ICASSP_EndToEndSLU.pdf). The differences in this case are that we use two attention mechanisms, one for attending the encoder hidden states, and the other for attending all the previous predictions, instead of using only the previous one like in the original decoder.
 
@@ -10,7 +10,7 @@ We use a similar training strategy as in [our previous work](http://www.marcodin
 We train thus the encoder alone first, by putting a simple decoder (Basic) on top of it, that is a linear layer mapping the encoder hidden states into the output vocabulary size. The pre-trained encoders are used to pre-initialize parameters of models using a LSTM decoder (LSTM).
 Models with a Basic decoder and trained for decoding tokens (ASR) are used to pre-initialize models with a Basic decoder trained for SLU.
 Results obtained with this strategy are summarized in the following table, we give both token decoding (ASR) and concept decoding (SLU) results.
-For more details please see the [paper submitted at Interspeech 2021](https://arxiv.org/abs/2104.11462).
+For more details please see the [paper accepted at Interspeech 2021](https://arxiv.org/abs/2104.11462).
 
 <center>
 <table>
@@ -184,7 +184,7 @@ For more details please see the [paper submitted at Interspeech 2021](https://ar
 
 # Installation
 
-The system was developped under **python 3.7, pytorch 1.4.0 and Fairseq 0.9**, it can probably work with other version of python and pytorch, but it will not work for sure under Fariseq 0.10. We are currently working for updating the code for the latest version of Fairseq (if you are in the hurry to use the system contact me, modofications do not take much time...).
+The system was developped under **python 3.7, pytorch 1.4.0 and Fairseq 0.9**, it can probably work with other version of python and pytorch, but it will not work for sure under Fariseq 0.10 or more recent. Tha's why we recommend, in order to reproduce our results, to download and install [Fairseq 0.9](https://github.com/pytorch/fairseq/releases/tag/v0.9.0).
 Once you have a running installation of Fairseq, you just have to copy files in the correct directories:
 
 - **End2EndSLU.py** in fairseq/tasks/
