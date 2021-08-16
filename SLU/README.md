@@ -238,4 +238,4 @@ Pay attention to the options:
 
 # Citation
 
-Coming soon...
+Please cite from the Bibtex provided with our [arXiv pre-print](https://arxiv.org/abs/2104.11462).
