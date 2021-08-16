@@ -1,6 +1,6 @@
 # Spoken Language Understanding (SLU)
 
-The SLU Benchmark used for the **LeBenchmark** is **MEDIA** (**link toward the data coming soon**).
+The SLU Benchmark used for the **LeBenchmark** is **MEDIA** ([See here for downloading input features](http://www.marcodinarelli.it/is2021.php)).
 
 The system used is based on Sequence-to-Sequence models and is coded for the [Fairseq library](https://github.com/pytorch/fairseq) (**updated code coming soon**).
 The encoder is similar to the pyramidal LSTM-based encoder proposed in the [Listen, attend and spell paper](https://arxiv.org/abs/1508.01211) (Kheops), the only difference is that we compute the mean of two consecutive hidden states for reducing the output size between two layers, instead of concatenating them like in the original model.
