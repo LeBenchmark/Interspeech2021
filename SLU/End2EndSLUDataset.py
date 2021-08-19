@@ -79,6 +79,14 @@ def collate(
             pad_idx, bos_idx=bos, eos_idx=eos, left_pad=left_pad, move_trail=move_trail,
         )
 
+    '''print(' *** collate sample shape:')
+    for s in samples:
+        print(' - source shape: {}'.format(s['source'].size()))
+        print(' - target shape: {}'.format(s['target'].size()))
+        print(' ---')
+    print(' *****')
+    sys.stdout.flush()'''
+
     id = torch.LongTensor([s['id'] for s in samples])
     src_tokens = merge_features('source', left_pad=left_pad_source)
     # sort by descending source length
@@ -129,6 +137,19 @@ def collate(
     }
     if prev_output_tokens is not None:
         batch['net_input']['prev_output_tokens'] = prev_output_tokens
+    #if next_output_tokens is not None:
+    #    batch['net_input']['next_output_tokens'] = next_output_tokens
+
+    '''print(' *** collate debug:')
+    print('   * target shape: {}'.format(target.size()))
+    print('   * target_lengths: {}'.format(tgt_lengths))
+    print('   * prev_output_tokens (prevot) shape: {}'.format(prev_output_tokens.size()))
+    print('')
+    print('   * target: {}'.format(target))
+    print(' -----')
+    print('   * prevot: {}'.format(prev_output_tokens))
+    print(' *****')
+    sys.exit(0)'''
 
     return batch
 
@@ -177,6 +198,8 @@ class End2EndSLUDataset(FairseqDataset):
         self.tgt_sizes = np.array(tgt_sizes) if tgt_sizes is not None else None
         self.tgt_dict = tgt_dict
 
+        #self.idx_batches = idx_structure
+
         self.idx_spk_batches = idx_structure
         self.idx_batches = []
         for s in idx_structure:
@@ -186,6 +209,22 @@ class End2EndSLUDataset(FairseqDataset):
         lengths = [(i, t.size(0)) for i, t in enumerate(src)]
         sorted_structure = sorted(lengths, key=lambda tuple: tuple[1])
         self.curriculum_indices = [t[0] for t in sorted_structure]
+
+        # Curriculum solution 2: sort turns by length separating machine and user turns, machine turns are put first as they are all from the same speaker and thus simpler. 
+        '''m_idx = []
+        u_idx = []
+        for s in idx_structure:
+            m_idx.extend( [t[0] for t in s if t[1] == 'Machine'] )
+            u_idx.extend( [t[0] for t in s if t[1] == 'User'] )
+
+        #u_idx = [t[0] for t in self.idx_spk_batches if t[1] == 'User']
+        m_lengths = [(i, src[i].size(0)) for i in m_idx]
+        u_lengths = [(i, src[i].size(0)) for i in u_idx] 
+        m_sorted_structure = sorted(m_lengths, key=lambda tuple: tuple[1])
+        m_sorted_idx = [t[0] for t in m_sorted_structure]
+        u_sorted_structure = sorted(u_lengths, key=lambda tuple: tuple[1])
+        u_sorted_idx = [t[0] for t in u_sorted_structure]
+        self.curriculum_indices = m_sorted_idx + u_sorted_idx'''
 
         assert len(src) == len(self.curriculum_indices)
 
@@ -198,6 +237,10 @@ class End2EndSLUDataset(FairseqDataset):
         self.append_bos = append_bos
         self.bos = tgt_dict.bos()
         self.eos = tgt_dict.eos() #(eos if eos is not None else tgt_dict.eos())
+
+        # For DEBUGGING
+        '''self.epochs_id_order = []
+        self.id_order = []'''
 
     def curriculum(self, value=False):
         self.shuffle = not value
@@ -219,6 +262,24 @@ class End2EndSLUDataset(FairseqDataset):
             bos = self.tgt_dict.bos()
             if self.tgt[index][0] != bos:
                 tgt_item = torch.cat([torch.LongTensor([bos]), self.tgt[index]])
+
+        # For DEBUGGING
+        '''if index in self.id_order:
+            if len(self.epochs_id_order) > 0:
+                equal = True
+                for idx in range(len(self.epochs_id_order[-1])):
+                    if self.epochs_id_order[-1][idx] != self.id_order[idx]:
+                        equal = False
+                        break
+                if equal:
+                    print(' *** End2EndSLUDataset: data order is the same between last two epochs')
+                    sys.stdout.flush()
+                else:
+                    print(' *** End2EndSLUDataset: data order changed in the last two epochs')
+                    sys.stdout.flush()
+            self.epochs_id_order.append( [el for el in self.id_order] )
+            self.id_order = []
+        self.id_order.append(index)'''
 
         example = {
             'id': index,
@@ -283,9 +344,20 @@ class End2EndSLUDataset(FairseqDataset):
             
         if self.shuffle:
             batch_shuffle_idx = np.random.permutation(len(self.idx_batches))
+            #[id for sid in shuffle for id in lists[sid]]
             indices = np.array([idx for sidx in batch_shuffle_idx for idx in self.idx_batches[sidx]])
+
+            #print(' - End2EndSLUDataset, using shuffled indices')
+            #sys.stdout.flush()
+
+            #indices = np.random.permutation(len(self)) 
         else:
+            #indices = np.arange(len(self))
             indices = np.array(self.curriculum_indices)
+
+            #print(' - End2EndSLUDataset, using curriculum indices')
+            #sys.stdout.flush()
+
             return indices
 
         if self.tgt_sizes is not None:

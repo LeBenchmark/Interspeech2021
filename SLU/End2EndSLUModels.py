@@ -3,6 +3,7 @@
 import sys
 import numpy as np
 import math
+import itertools
 import random
 import torch
 import torch.nn as nn
@@ -19,6 +20,7 @@ from fairseq.models import (
     FairseqIncrementalDecoder,
     register_model,
     register_model_architecture,
+    slu_models,
 )
 
 from fairseq.models.transformer import TransformerModel, base_architecture as trans_ba
@@ -47,10 +49,14 @@ class Conv1dNormWrapper(nn.Module):
         
         super(Conv1dNormWrapper,self).__init__()
 
+        #self.cNorm = nn.LayerNorm(input_size)
         self.conv = nn.Conv1d(input_size, output_size, kernel, stride=stride_factor)
         self.cNorm = nn.LayerNorm( output_size )
     
     def forward(self, input):
+
+        # L x B x C -> B x C x L for convolution; B x C x L -> L x B x C back to input shape
+        #x = self.cNorm( input ).permute(1, 2, 0)
         x = self.conv( input.permute(1, 2, 0) ).permute(2, 0, 1)
         x = self.cNorm( x )
         return x
@@ -68,13 +74,22 @@ class LSTMWrapper(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
         self.drop_ratio = drop_ratio
+        #self.lstm_norm = nn.LayerNorm(input_size)
+
+        #print(' *** LSTMWrapper, adding LSTM of size: {} x {}'.format(input_size, output_size))
+        #sys.stdout.flush()
 
         self.lstm = nn.LSTM(input_size, output_size, bidirectional=bidirFlag)
         norm_size = output_size * 2 if bidirFlag else output_size
         self.lstm_norm = nn.LayerNorm(norm_size)
 
         self.fc1 = None
+        '''nn.Linear(input_size, 4*output_size) if input_size == output_size and bidirFlag else None
+        self.fc2 = nn.Linear(4*output_size, 2*output_size) if input_size == output_size and bidirFlag else None'''
+
         self.fc3 = None
+        '''nn.Linear(2*output_size, 4*output_size) if input_size // 2 == output_size and bidirFlag else None
+        self.fc4 = nn.Linear(4*output_size, 2*output_size) if input_size // 2 == output_size and bidirFlag else None'''
 
         class BogusClass :
             name = 'BogusClass'
@@ -86,9 +101,41 @@ class LSTMWrapper(nn.Module):
 
     def forward(self, input):
 
-        output, _ = self.lstm( input )
+        #output = self.lstm_norm( input )
+        output, _ = self.lstm( input )  # 1. "Transform"
+        #if self.fc3 is None:
         output = self.lstm_norm( output )
+        #if self.input_size == self.output_size:
+        #    return F.dropout(output, p=self.drop_ratio, training=self.training) + input # 2. & 3. Drop & Residual add
+        #else:
+
+        '''if self.fc1 is not None: 
+            residual = self.activation_fn(self.fc1(input))
+            #zero_tsr = torch.zeros_like(residual)
+            #residual = torch.max(zero_tsr, residual)
+            residual = F.dropout(residual, p=self.drop_ratio, training=self.training)
+            residual = self.fc2(residual)
+            residual = F.dropout(residual, p=self.drop_ratio, training=self.training)
+            #output = F.dropout(output, p=self.drop_ratio, training=self.training) + residual
+            output = output + residual'''
+        #else:
         output = F.dropout(output, p=self.drop_ratio, training=self.training)
+
+        '''if self.fc3 is not None:
+            # 1. Store residual value
+            residual = output
+            # 2. Normalize
+            output = self.lstm_norm(output)
+            # 3. Transform
+            output = self.activation_fn(self.fc3(output))
+            #zero_tsr = torch.zeros_like(output)
+            #output = torch.max(zero_tsr, output)
+            output = F.dropout(output, p=self.drop_ratio, training=self.training)
+            output = self.fc4(output)
+            # 4. Drop
+            output = F.dropout(output, p=self.drop_ratio, training=self.training)
+            # 5. Residual add
+            output = output + residual'''
 
         return output
 
@@ -120,6 +167,9 @@ class PyramidalRNNEncoder(nn.Module):
         self.params = params
         bidirectional = True
         self.kheops_base_height = 1
+        self.kheops_hidd_height = params.pyramid_hidden_layers
+        self.kheops_ptop_height = 1
+        self.min_output_length = 15
 
         self.layers = nn.ModuleList() 
         self.norms = nn.ModuleList()
@@ -127,10 +177,14 @@ class PyramidalRNNEncoder(nn.Module):
             input_size = 2*self.params.speech_lstm_size
             nlayers = 1
             if i == 0:
-                input_size = self.params.num_features
+                input_size = self.params.num_features   # TODO: replace num_features with speech_conv_size if the convolution is added to the encoder.
                 nlayers = self.kheops_base_height
+            elif i < self.params.num_lstm_layers-1:
+                nlayers = self.kheops_hidd_height
+            else:
+                nlayers = self.kheops_ptop_height
  
-            self.layers.append( nn.LSTM(input_size, self.params.speech_lstm_size, num_layers=nlayers, bidirectional=bidirectional) ) 
+            self.layers.append( nn.LSTM(input_size, self.params.speech_lstm_size, num_layers=nlayers, bidirectional=bidirectional) ) # TODO: Try adding in LSTM constructor dropout=self.params.drop_ratio
             self.norms.append( nn.LayerNorm( 2*self.params.speech_lstm_size ) )
 
         self.encoder_output_units = self.params.speech_lstm_size
@@ -156,6 +210,12 @@ class PyramidalRNNEncoder(nn.Module):
 
             H = self.norms[i](H)
             H = F.dropout(H, p=self.params.drop_ratio, training=self.training)
+            
+        if H.size(0) < self.min_output_length:
+            #min_len = self.min_output_length +2
+            #ratio = H.size(0) / (self.min_output_length+2)
+            idxs = [int(i * (H.size(0) / (self.min_output_length+2))) for i in range(1, self.min_output_length+1)]    # We exclude first and last frame which may encode just the speaker marker.
+            H = H[idxs,:,:]
 
         return H
 
@@ -165,6 +225,7 @@ class BasicEncoder(nn.Module):
     def __init__(self, params):
         
         super(BasicEncoder,self).__init__()
+        #self.window_size = params.window_size
         
         # Parameter initialization
         self.params = params
@@ -185,6 +246,7 @@ class BasicEncoder(nn.Module):
         self.convolutions = nn.Sequential( OrderedDict(conv_layers) )
 
         lstm_size = 2*self.params.speech_lstm_size
+        #self.conv2lstm = nn.Linear(self.params.speech_conv_size, lstm_size, bias=False)
 
         # 2. Recurrent layers
         recurrent_layers = [] 
@@ -193,7 +255,12 @@ class BasicEncoder(nn.Module):
             if i == 0:
                 input_size = self.params.speech_conv_size 
             recurrent_layers.append( ('LSTM'+str(i+1), LSTMWrapper(input_size, self.params.speech_lstm_size, bidirectional, self.params.drop_ratio)) )
+            #recurrent_layers.append( ('ConvNorm'+str(i+1), nn.LayerNorm( 2*self.params.speech_lstm_size )) )
+            #recurrent_layers.append( ('LSTMDropout'+str(i+1), nn.Dropout(p=self.params.drop_ratio)) )
         self.rnns = nn.Sequential( OrderedDict(recurrent_layers) )
+            
+        #Linear Layer
+        #self.linear_layer = nn.Linear(2*self.params.speech_lstm_size, self.params.output_size)
 
         self.encoder_output_units = self.params.speech_lstm_size
         if bidirectional:
@@ -203,7 +270,9 @@ class BasicEncoder(nn.Module):
         # Input has shape (sequence_length, batch_size, num. of channels), that is (L, N, C), convolution needs it to be (N, C, L)
 
         conv_state = self.convolutions( x )
+        #x = self.conv2lstm(conv_state)
         hidden_state = self.rnns( conv_state )
+        #output = self.linear_layer( hidden_state )
 
         return (conv_state, hidden_state)
 
@@ -228,10 +297,11 @@ class End2EndSLUEncoder(FairseqEncoder):
         self.padding_idx = dictionary.pad_index
         self.blank_idx = dictionary.set_blank() 
 
+        #self.encoder = BasicEncoder(args)
         self.encoder = PyramidalRNNEncoder(args, dictionary)
-        self.encoder_output_units = self.encoder.encoder_output_units
+        self.encoder_output_units = self.encoder.encoder_output_units  # NEW ARCHITECTURE FOR COMBINED LOSS: the current output is the projection to the output dict, unless we are giving hidden states to the decoder instead of output projections
 
-        self.return_all_hiddens = False
+        self.return_all_hiddens = False #args.return_all_hiddens
         self.trans_layers = None
         if args.encoder_transformer_layers:
             old_val = args.encoder_embed_dim
@@ -246,6 +316,10 @@ class End2EndSLUEncoder(FairseqEncoder):
 
         self.speakers = None
 
+        # NEW ARCHITECTURE FOR COMBINED LOSS
+        #self.output_projection = nn.Linear(args.encoder_hidden_dim*2, len(dictionary))
+        #self.output_norm = nn.LayerNorm(len(dictionary))
+
     def set_turn_speaker(self, val):
         self.speakers = val
         return self.speakers
@@ -254,12 +328,18 @@ class End2EndSLUEncoder(FairseqEncoder):
 
         assert stride == 2, 'padding convolution not implemented for stride other than 2'
 
+        '''print(' * conv_padding_mask input:')
+        print('   - t: {}'.format(t.size()))
+        print('   - c: {}'.format(c.size()))
+        print(' *****')'''
+
         (T1, B, C1) = t.size()
         (T2, B, C2) = c.size()
         t_padding = torch.zeros(T1, B) 
         for i in range(B):
             tmp = torch.sum(t[:,i,:], -1)
             t_padding[:,i] = (tmp == 0)
+        #print(' * conv_padding_mask, t_padding: {}'.format(t_padding))
         c_padding = torch.zeros(T2, B)
         for j in range(B):
             c_idx = 0
@@ -284,10 +364,13 @@ class End2EndSLUEncoder(FairseqEncoder):
 
         x = src_tokens.transpose(0,1) 
 
+        #(conv_states, hidden_states) = self.encoder( x )
         hidden_states = self.encoder( x ) 
-        (src_len, bsz, dim) = hidden_states.size()
+        (src_len, bsz, dim) = hidden_states.size() #conv_states.size()
+        #(h_src_len, h_bsz, h_dim) = hidden_states.size() 
 
         # T x B x C -> B x T x C
+        # NEW ARCHITECTURE FOR COMBINED LOSS: these operations have been moved below (and correct!)
         encoder_embedding = hidden_states.transpose(0,1) #conv_states.transpose(0,1)
         # NOTE: input is speech signal (spectrogram frames, or wav2vec features), padding is zero, i.e. there's no padding from a NLP point of view...
         encoder_padding = torch.LongTensor(bsz, src_len).fill_(self.padding_idx+13).to(src_tokens.device)
@@ -308,6 +391,14 @@ class End2EndSLUEncoder(FairseqEncoder):
                 if self.return_all_hiddens:
                     encoder_states[-1] = x
 
+        # NEW ARCHITECTURE FOR COMBINED LOSS
+        #x = self.output_projection(x)
+        #x = self.output_norm(x)
+        #scores = F.softmax(x, -1)
+        #_, preds = torch.max(scores, -1)
+        #encoder_embedding = x.transpose(0, 1)
+        #encoder_padding_mask = preds.eq(self.blank_idx)
+
         encoder_out = x
 
         # Return the Encoder's output. This can be any object and will be
@@ -315,7 +406,7 @@ class End2EndSLUEncoder(FairseqEncoder):
         if self.args.decoder in ['basic', 'transformer']:
             return EncoderOut(
                 encoder_out=encoder_out,   # T x B x C
-                encoder_padding_mask=encoder_padding_mask,    # B x T
+                encoder_padding_mask=encoder_padding_mask,    # B x T   # NEW ARCHITECTURE FOR COMBINED LOSS: this mask must be transposed with the new architecture
                 encoder_embedding=encoder_embedding,    # B x T x C
                 encoder_states=encoder_states, # List[T x B x C]
             )
@@ -324,7 +415,7 @@ class End2EndSLUEncoder(FairseqEncoder):
 
             return {
                     'encoder_out': (encoder_out, final_hiddens, final_cells),
-                    'encoder_padding_mask': None
+                    'encoder_padding_mask': None    # NEW ARCHITECTURE FOR COMBINED LOSS: set this back to None to come back to previous architecture.
             }
 
     # Encoders are required to implement this method so that we can rearrange
@@ -384,6 +475,7 @@ class End2EndSLUEncoder(FairseqEncoder):
                     'encoder_padding_mask': None
             }
         elif self.args.decoder == 'end2end_slu':
+            # TODO: add the branch for the transformer as above
             hidden_states = encoder_out['encoder_out'][0]
             new_hidden_states = hidden_states if hidden_states is None else hidden_states.index_select(1, new_order)
             new_final_h, new_final_c = create_lstm_final_states_(self.args.decoder_layers, new_hidden_states)
@@ -417,6 +509,9 @@ class BasicDecoder(FairseqIncrementalDecoder):
 
         # Define the output projection.
         self.is_didx_key = 'decoding_idx'
+        #self.input_norm = nn.LayerNorm(hidden_dim)
+
+        # NEW ARCHITECTURE FOR COMBINED LOSS: these components have been moved in the encoder
         self.output_projection = nn.Linear(hidden_dim, len(dictionary))
         self.output_norm = nn.LayerNorm(len(dictionary))
 
@@ -435,10 +530,14 @@ class BasicDecoder(FairseqIncrementalDecoder):
 
         x = encoder_out.encoder_out 
 
-        bsz, seqlen = prev_output_tokens.size()
+        '''bsz, seqlen = prev_output_tokens.size()
         srclen = x.size(0)
+        if srclen < seqlen:
+            print(' - BasicDecoder: TARGET LEN MISS!')
+            sys.stdout.flush()'''
 
-        # Project the outputs to the size of the vocabulary.
+        # Project the outputs to the size of the vocabulary. 
+        # NEW ARCHITECTURE FOR COMBINED LOSS: these operations have been moved into the encoder
         x = self.output_projection(x)
         x = self.output_norm(x) 
 
@@ -446,9 +545,15 @@ class BasicDecoder(FairseqIncrementalDecoder):
 
         # T x B x C -> B x T x C
         x = x.transpose(0, 1)
+        #print(' - forward, got input of shape: {}'.format(x.size()))
         if incremental_state is not None:
+            #print(' - forward, decoding at position {}'.format(dec_idx))
+            #sys.stdout.flush()
             if dec_idx >= x.size(1):
-                dec_idx = x.size(1)-1
+                print(' - forward, binding decoding position at {}'.format(x.size(1)-1))
+                sys.stdout.flush()
+
+                dec_idx = x.size(1)-1   # sequence_generator can decode for max_len+1 steps, it may thus exceed the source length
             x = x[:,dec_idx,:].view(B,1,-1)
 
         # Return the logits and ``None`` for the attention weights 
@@ -486,6 +591,8 @@ class ICASSPDecoder(FairseqIncrementalDecoder):
                 padding_idx=dictionary.pad(),
             )
 
+        #print(' - decoder embeddings: {} x {}'.format(args.decoder_embed_dim, len(dictionary)))
+
         mapping_size = args.decoder_embed_dim + args.decoder_hidden_dim
         if mapping_size != args.decoder_hidden_dim:
             self.input_map = nn.Linear(mapping_size, args.decoder_hidden_dim, bias=False) 
@@ -498,6 +605,8 @@ class ICASSPDecoder(FairseqIncrementalDecoder):
             self.input_map_h = None
             self.input_map_c = None
 
+        #print(' - input_map: {} x {}'.format(mapping_size, args.decoder_hidden_dim))
+
         self.dropout = nn.Dropout(p=args.dropout)
 
         self.layers = nn.ModuleList([
@@ -507,6 +616,8 @@ class ICASSPDecoder(FairseqIncrementalDecoder):
             )
             for layer in range(args.decoder_layers)
         ])
+
+        #print(' - LSTM cells and Norm layers: {}'.format(args.decoder_hidden_dim))
 
         self.rnn_norm = nn.ModuleList([
             nn.LayerNorm(args.decoder_hidden_dim)
@@ -555,6 +666,9 @@ class ICASSPDecoder(FairseqIncrementalDecoder):
         Similar to *forward* but only return features.
         """
 
+        # FOR DEBUGGING:
+        #incremental_state = None
+
         encoder_padding_mask = encoder_out['encoder_padding_mask']
         encoder_out = encoder_out['encoder_out']
  
@@ -574,9 +688,12 @@ class ICASSPDecoder(FairseqIncrementalDecoder):
 
         # embed tokens
         x = self.dec_embeddings(prev_output_tokens)
+        #x = F.dropout(x, p=self.args.dropout, training=self.training)  # NOTE: decoder embeddings are dropped after the input_map liner layer.
 
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
+
+        #print(' - forward, embedding size: {}'.format(x.size()))
 
         if incremental_state is not None and len(incremental_state) > 0:
             prev_hiddens, prev_cells, input_feed, src_idx = self.get_cached_state(incremental_state)
@@ -715,6 +832,10 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
         super().__init__(dictionary)
         self.dropout_in = dropout_in
         self.dropout_out = dropout_out
+
+        print(' - ICASSPDecoderEx, dropout_in and dropout_out: {}, {}'.format(self.dropout_in, self.dropout_out))
+        sys.stdout.flush()
+
         self.hidden_size = hidden_size
         self.out_embed_dim = out_embed_dim
         self.share_input_output_embed = share_input_output_embed
@@ -725,6 +846,8 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
             self.register_buffer('prev_output_tokens_h', torch.LongTensor(args.max_sentences, 4*max_target_positions).fill_(dictionary.pad()))
             self.prev_output_tokens_h.requires_grad = False
 
+        self.bin_ray = args.encoder_state_window
+        self.prev_pred_query = args.prev_prediction_query
         self.scheduled_sampling = False
         self.scheduled_sampling_updates = 0
         self.n_scheduled_sampling = 0
@@ -746,7 +869,8 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
         else:
             self.encoder_hidden_proj = self.encoder_cell_proj = None
 
-        self.pred_attention = AttentionLayer(hidden_size, embed_dim, hidden_size, bias=False)
+        self.pred_attention = AttentionLayer(hidden_size, embed_dim, hidden_size, bias=False) # TODO: use this as input to the LSTM instead of x
+        #self.pred_attention = AttentionLayer(encoder_output_units, embed_dim, hidden_size, bias=False)
 
         # disable input feeding if there is no encoder
         # input feeding is described in arxiv.org/abs/1508.04025
@@ -768,8 +892,11 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
             )
             for layer in range(num_layers)
         ])
+        #for layer in range(num_layers):
+        #    input_size = input_feed_size + embed_dim if layer == 0 else hidden_size 
 
         if attention:
+            # TODO make bias configurable
             self.attention = AttentionLayer(hidden_size, encoder_output_units, hidden_size, bias=False)
         else:
             self.attention = None
@@ -801,6 +928,9 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
             if self.scheduled_sampling_updates > 1:
                 self.scheduled_sampling_p = self.scheduled_sampling_init * (0.98**(epoch-2))
 
+        print(' - ICASSPDecoderEx: scheduled sampling set to {} (updates: {}; p: {})'.format(self.scheduled_sampling, self.scheduled_sampling_updates, self.scheduled_sampling_p))
+        sys.stdout.flush()
+
     def n_scheduled_sampling_(self, val=0):
         old_val = self.n_scheduled_sampling
         self.n_scheduled_sampling = val
@@ -815,8 +945,56 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
     def scheduled_sampling_predict_(self, x):
         x = self.output_layer(x)
         scores = F.log_softmax(x, -1)
+
+        #print(' - scheduled_sampling processing, x: {}; scores: {}'.format(x.size(), scores.size()))
+        #sys.stdout.flush() 
+
         max_sc, pred = torch.max(scores, -1)
         return pred
+
+    def filter_prev_output_tokens_(self, predictions, T, debug_flag=False):
+
+        samples = []
+        max_L = 0
+        B, L = predictions.size()
+
+        if debug_flag:
+            print(' - predictions: {}'.format(predictions.size()))
+
+        for i in range(B):
+            if debug_flag:
+                print(' - predictions[{}]: {}'.format(i, predictions[i,:]))
+
+            t = torch.unique_consecutive(predictions[i,:T])
+
+            if debug_flag:
+                print(' - compacted predictions: {}'.format(t))
+
+            t = t[t != self.blank_idx]
+            t = t[t != self.padding_idx]
+
+            if debug_flag:
+                print(' - cleaned predictions: {}'.format(t))
+
+            if max_L < t.size(0):
+                max_L = t.size(0)
+            samples.append( t )
+
+        res = torch.LongTensor(B, max_L).fill_(self.padding_idx)
+        for i in range(B):
+            res[i,0:samples[i].size(0)] = samples[i]
+
+        if debug_flag:
+            print(' - result ({}): {}'.format(res.size(), res))
+            sys.stdout.flush()
+
+        res = res.to(predictions)
+        x = self.embed_tokens(res)
+        x = F.dropout(x, p=self.dropout_in, training=self.training)
+        x = x.transpose(0, 1)
+        padding_mask = res.eq(self.padding_idx).transpose(0, 1)
+
+        return x, padding_mask
 
     def extract_features(
         self, prev_output_tokens, encoder_out, incremental_state=None
@@ -832,6 +1010,7 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
             encoder_out = None
 
         if incremental_state is not None:
+            #prev_predictions = prev_output_tokens.clone()
             prev_output_tokens = prev_output_tokens[:, -1:]
         bsz, seqlen = prev_output_tokens.size()
 
@@ -842,13 +1021,14 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
         else:
             srclen = None
  
-        bin_ray = 2
+        #bin_ray = 2
         enc_cached_state = utils.get_incremental_state(self, incremental_state, 'enc_cached_state')
+        #print(' - blank token index: {}'.format(self.dictionary.set_blank()))
         if enc_cached_state is not None:
             enc_idx, prev_predictions = enc_cached_state
             enc_idx = min(srclen-1,enc_idx) 
-            low_bound = max(0,enc_idx-bin_ray)
-            up_bound = min(enc_idx+bin_ray+1,srclen)
+            low_bound = max(0,enc_idx-self.bin_ray)
+            up_bound = min(enc_idx+self.bin_ray+1,srclen)
             att_encoder_outs = encoder_outs[low_bound:up_bound,:,:]
             att_encoder_mask = encoder_padding_mask[low_bound:up_bound,:,:] if encoder_padding_mask is not None else None
             encoder_outs = encoder_outs[enc_idx,:,:].view(1, bsz, -1) 
@@ -856,7 +1036,7 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
         elif incremental_state is not None:
             enc_idx = 0 
             low_bound = 0
-            up_bound = min(2*bin_ray+1, srclen)
+            up_bound = min(2*self.bin_ray+1, srclen)
             att_encoder_outs = encoder_outs[low_bound:up_bound,:,:]
             att_encoder_mask = encoder_padding_mask[low_bound:up_bound,:,:] if encoder_padding_mask is not None else None
             encoder_outs = encoder_outs[enc_idx,:,:].view(1, bsz, -1) 
@@ -912,9 +1092,15 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
                 self.scheduled_sampling = False
             else:
                 self.n_scheduled_sampling += 1
+                #print(' - ICASSPDecoderEx, using scheduled sampling ({})'.format(self.n_scheduled_sampling))
+                #sys.stdout.flush()
         train_flag = incremental_state is None and self.scheduled_sampling
         if train_flag:
             scheduled_sampling_out = torch.zeros(declen, bsz, self.out_embed_dim).to(x)
+            #scheduled_sampling_prev_lst = []
+            #scheduled_sampling_prev = torch.LongTensor(bsz, 1).fill_(self.padding_idx).to(prev_predictions)
+            #scheduled_sampling_prev[:,0] = self.dictionary.eos()
+            #scheduled_sampling_prev_lst.append( scheduled_sampling_prev ) 
             self.prev_output_tokens_h.fill_(self.dictionary.pad())
             self.prev_output_tokens_h[:,0] = self.dictionary.eos()
         for j in range(declen):
@@ -923,21 +1109,43 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
             curr_pred_mask = prev_predictions_mask
             if incremental_state is None:
                 if self.scheduled_sampling:
-                    scheduled_sampling_prev = self.prev_output_tokens_h[:bsz,:j+1].clone() #torch.cat( scheduled_sampling_prev_lst, 1 )
-                    prev_predictions_mask = scheduled_sampling_prev.eq(self.padding_idx)
-                    prev_predictions_mask[scheduled_sampling_prev == self.blank_idx] = True
+
+                    #print(' - ICASSPDecoderEx: using scheduled sampling training...')
+                    #sys.stdout.flush()
+
+                    cacheB, cacheT = self.prev_output_tokens_h.size()
+                    if cacheB != bsz:
+                        print(' - ICASSPDecoderEx, reducing scheduled sampling predicted tokens cache: {} vs. {} (length: {} vs. {})'.format(cacheB, bsz, cacheT, seqlen))
+                        sys.stdout.flush()
+
+                    prev_predictions = self.prev_output_tokens_h[:bsz,:j+1].clone() #torch.cat( scheduled_sampling_prev_lst, 1 )
+                    prev_predictions_mask = prev_predictions.eq(self.padding_idx)
+                    prev_predictions_mask[prev_predictions == self.blank_idx] = True
                     prev_predictions_mask = prev_predictions_mask.transpose(0, 1)
-                    x = self.embed_tokens(scheduled_sampling_prev)
+                    x = self.embed_tokens(prev_predictions)
                     x = F.dropout(x, p=self.dropout_in, training=self.training)
                     x = x.transpose(0, 1)
                     tgt_idx = j+1
                 else:
-                    tgt_idx = int( j * (float(seqlen)/float(srclen)) ) + 1
-                curr_pred = x[:tgt_idx,:,:] 
-                curr_pred_mask = prev_predictions_mask[:tgt_idx,:]
+                    tgt_idx = int( j * (float(seqlen)/float(srclen)) ) + 1   # +1 because we use tgt_idx in a range (:tgt_idx), otherwise the element at position tgt_idx would not be used
+                curr_pred = x[:tgt_idx,:,:]
+                curr_pred_mask = prev_predictions_mask[:tgt_idx,:] 
+           
+            #print(' - ICASSPDecoderEx: input for prediction attention computed (shape: {}; {})'.format(curr_pred.size(), curr_pred_mask.size()))
+            #sys.stdout.flush()
 
-            query = prev_hiddens[-1]
-            pred_attn, _ = self.pred_attention(query, curr_pred, curr_pred_mask)
+            if train_flag:
+                cacheB, cacheT = self.prev_output_tokens_h.size()
+                if cacheB != bsz:
+                    print(' - ICASSPDecoderEx, attention input shapes:')
+                    print('   - prev_hiddens[0]: {}'.format(prev_hiddens[0].size()))
+                    print('   - curr_pred: {}'.format(curr_pred.size()))
+                    print('   - curr_pred_mask: {}'.format(curr_pred_mask.size()))
+                    sys.stdout.flush() 
+
+            #curr_pred, curr_pred_mask = self.filter_prev_output_tokens_(prev_predictions, tgt_idx if incremental_state is None else j+1)
+            query = prev_hiddens[self.prev_pred_query] #encoder_outs[j] if incremental_state is None else encoder_outs.view(bsz, -1)
+            pred_attn, _ = self.pred_attention(query, curr_pred, curr_pred_mask)   # TODO: prev_hiddens[0] as query seems to work better.
             pred_attn = F.dropout(pred_attn, p=self.dropout_out, training=self.training)
             if input_feed is not None:
                 input = torch.cat((pred_attn, input_feed), dim=1)
@@ -963,10 +1171,16 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
             if self.attention is not None:
                 if incremental_state is None:
                     src_idx = j 
-                    low_bound = max(src_idx-bin_ray,0)
-                    up_bound = min(src_idx+bin_ray+1,srclen) if src_idx > 0 else min(2*src_idx+1, srclen)
+                    low_bound = max(src_idx-self.bin_ray,0)
+                    up_bound = min(src_idx+self.bin_ray+1,srclen) if src_idx > 0 else min(2*src_idx+1, srclen)
                     att_encoder_mask = encoder_padding_mask[low_bound:up_bound,:,:] if encoder_padding_mask is not None else None
                     att_encoder_outs = encoder_outs[low_bound:up_bound,:,:]
+                    '''if att_encoder_outs.size(0) < self.bin_ray*2:
+                        att_encoder_outs = torch.cat( [att_encoder_outs, torch.zeros(self.bin_ray*2 - att_encoder_outs.size(0), att_encoder_outs.size(1), att_encoder_outs.size(2)).to(att_encoder_outs)] )
+                        att_encoder_mask = torch.cat( [att_encoder_mask, torch.ones(self.bin_ray*2 - att_encoder_mask.size(0), att_encoder_mask.size(1), att_encoder_mask.size(2)).to(att_encoder_mask)] ) if encoder_padding_mask is not None else None
+                    elif att_encoder_outs.size(0) != self.bin_ray*2:
+                        raise ValueError'''
+
                 out, _ = self.attention(hidden, att_encoder_outs, att_encoder_mask) 
             else:
                 out = hidden
@@ -977,10 +1191,21 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
                 input_feed = out
 
             if train_flag:
+                #print(' - ICASSPDecoderEx, computing predictions...')
+                #sys.stdout.flush() 
+
                 ss_x = self.scheduled_sampling_output_(out)
                 ss_pred = self.scheduled_sampling_predict_(ss_x)
+
+                #print(' - ICASSPDecoderEx, predictions computed: {}; {}'.format(ss_x.size(), ss_pred.size()))
+                #sys.stdout.flush()
+
                 scheduled_sampling_out[j,:,:] = ss_x
+                #scheduled_sampling_prev_lst.append( ss_pred.view(bsz, -1) )
                 self.prev_output_tokens_h[:,j+1] = ss_pred
+
+                #print(' ====================')
+                #sys.stdout.flush()
             else:
                 # save final output
                 outs.append(out)
@@ -996,6 +1221,9 @@ class ICASSPDecoderEx(FairseqIncrementalDecoder):
         else:
             # collect outputs across time steps
             x = torch.cat(outs, dim=0).view(declen, bsz, self.hidden_size)
+
+        #print(' - ICASSPDecoderEx, final x shape: {}'.format(x.size()))
+        #sys.stdout.flush()
 
         # T x B x C -> B x T x C
         x = x.transpose(1, 0)
@@ -1113,7 +1341,13 @@ class End2EndSLUDecoder(FairseqIncrementalDecoder):
         B, T = predictions.size()
         boundaries = [[] for i in range(B)]
         for i in range(B):
+            #if not self.training:
+            #print(' ### predictions[{}]: {}'.format(i, predictions[i]))
+            #print('   === {}'.format(self.dictionary.string(predictions[i])))
             boundaries[i] = [j for j in range(T) if predictions[i,j] == eoc]
+            
+            #if not self.training:
+            #print(' *** b[{}]: {}'.format(i, boundaries[i]))
 
         return boundaries
 
@@ -1123,23 +1357,85 @@ class End2EndSLUDecoder(FairseqIncrementalDecoder):
         qB, qT = q.size()
         reps = [[] for i in range(B)]
         for i in range(B):
+            #soc = 0
+            #for j in range(len(b[i])):
+            #for q_idx in range(qT):
+
+            #if not self.training:
+            #print('  *** creating chunk at boundaries: {} - {}'.format(soc, b[i][j]))
+
+            #if b[i][j] > soc:
+
+            #chunk = H[i, soc:b[i][j], :].unsqueeze(1) # chunk: T x B x C; B == 1 since we loop over every single chunk
             chunk = H[i,:,:].unsqueeze(1)
-            chunk_mask = None
+
+            #if not self.training:
+            #print('  *** chunk shape: {}'.format(chunk.size()))
+            #print('  *** query shape: {}'.format(chunk[0,:,:].size()))
+            sys.stdout.flush()
+
+            chunk_mask = None #chunk.eq(self.blank_idx)
+
+            #print('  *** chunk_mask shape: {}'.format(chunk_mask.size()))
+            #sys.stdout.flush()
+
+            #print('  *** unfiltered querires: {}'.format(q[i]))
+
             queries = q[i, q[i,:] != self.dictionary.pad()]
+
+            #print('  *** filtered queries: {}'.format(queries))
+
+            #r = [self.boundary_attention(chunk[k,:,:], chunk, chunk_mask) for k in range(chunk.size(0))]
+
+            #print('  *** one query shape: {}'.format( self.embed_tokens(queries[0]).size() ))
+            #sys.stdout.flush()
+            #sys.exit(0)
+
             r = [self.boundary_attention(self.embed_tokens(q_idx).view(1,-1), chunk, chunk_mask) for q_idx in queries]
-            reps[i] = [ri[0].squeeze() for ri in r]
-            
-            if len(reps[i]) == 0:
+            #r = torch.sum( torch.stack( [ri[0] for ri in r], 0 ), 0 )   # TODO: maybe there is a better way to compute the final representation of a chunk...
+                
+            #if not self.training:
+            #print('  *** attention r shape: {}'.format(r.size()))
+            #sys.stdout.flush()
+
+            reps[i] = [ri[0].squeeze() for ri in r] #.append(r.squeeze())
+            #soc = b[i][j]+1
+
+            #print('  *** -----')
+            #sys.stdout.flush()
+
+            if len(reps[i]) == 0:   # NOTE: At test phase predictions can be messy and yield empty chunks
                 reps[i] = [torch.zeros(self.hidden_size).to(H)]
+
+            #print(' ==========')
+            #sys.stdout.flush()
+
+        '''print(' - Intermediate representations 1:')
+        for i in range(B):
+            print('    - {}'.format(len(reps[i])))
+        sys.stdout.flush()'''
 
         for i in range(B):
             reps[i] = torch.stack(reps[i], 0)
+            #print('  ***** stacked reps shape: {}'.format(reps[i].size()))
+            #sys.stdout.flush()
+
+        '''print(' - Intermediate representations 2:')
+        for i in range(B):
+            print('    - {}'.format(reps[i].size()))
+        sys.stdout.flush()'''
 
         max_len = max([t.size(0) for t in reps])
         res = torch.zeros(B, max_len, self.hidden_size).to(H)
 
+        #print('  *** res shape: {}'.format(res.size()))
+        #sys.stdout.flush()
+
         for i in range(B):
             res[i,0:reps[i].size(0),:] = reps[i]
+
+        #print(' - Final representations shape: {}'.format(res.size()))
+        #sys.stdout.flush()
 
         return res
 
@@ -1153,19 +1449,26 @@ class End2EndSLUDecoder(FairseqIncrementalDecoder):
             if cds is None:
                 utils.set_incremental_state(self, incremental_state, 'concept-decoder-state', {} )
 
+        # TODO: manage 'prev_output_tokens' and concept_decoder (not needed) at generation phase
+
+        #if not self.training:
+        #print(' - prev_output_tokens shape: {}'.format(prev_output_tokens.size()))
+        #sys.stdout.flush()
+
         if incremental_state is not None:
             prev_output_tokens = prev_output_tokens[:, -1:]
 
         bds = utils.get_incremental_state(self, incremental_state, 'boundary-decoder-state')
         b_outs, b_attn = self.boundary_decoder(prev_output_tokens, encoder_out=encoder_out, incremental_state=bds, **kwargs)
         if incremental_state is None:
+            #print(' - getting boundaries from gold standard...')
             boundaries = self.get_boundaries_(prev_output_tokens, self.end_concept)
         else:
             b_scores = F.log_softmax(b_outs, -1)
-            _, preds = torch.max(b_scores, -1)
+            _, preds = torch.max(b_scores, -1)  # preds: B x T
             boundaries = self.get_boundaries_(preds, self.end_concept)
 
-        if incremental_state is None:
+        if incremental_state is None:   # NOTE: we only need this at training phase to learn a good segmentation and tagging sequence
             concept_reps = self.compute_concept_reps_(prev_output_tokens, b_outs, boundaries)
             concept_reps = concept_reps.transpose(0,1)
 
@@ -1176,7 +1479,7 @@ class End2EndSLUDecoder(FairseqIncrementalDecoder):
                 for spk_idx in range(cr_B):
                     spk_val = 5.0 if self.speaker[spk_idx] == 'User' else -5.0
                     spk_shift[:,spk_idx,:] = spk_val
-                concept_reps = spk_shift + concept_reps
+                concept_reps = spk_shift + concept_reps #torch.cat( [spk_pad, concept_reps, spk_pad], 0 )
 
             concepts, _ = extract_concepts(prev_output_tokens, self.dictionary.bos(), self.dictionary.eos(), self.dictionary.pad(), self.end_concept, move_trail=True) 
 
@@ -1188,6 +1491,12 @@ class End2EndSLUDecoder(FairseqIncrementalDecoder):
 
             cds = utils.get_incremental_state(self, incremental_state, 'concept-decoder-state')
             c_outs, c_attn = self.concept_decoder(concepts, encoder_out=encoder_out, incremental_state=cds, **kwargs)
+
+            '''if self.training:
+                assert prev_output_tokens.size(0) == b_outs.size(0), '{} vs. {}'.format(prev_output_tokens.size(0), b_outs.size(0))
+                assert prev_output_tokens.size(1) == b_outs.size(1), '{} vs. {}'.format(prev_output_tokens.size(1), b_outs.size(1))
+                assert concepts.size(0) == c_outs.size(0), '{} vs. {}'.format(concepts.size(0), c_outs.size(0))
+                assert concepts.size(1) == c_outs.size(1), '{} vs. {}'.format(concepts.size(1), c_outs.size(1))'''
         else:
             c_attn = None
             c_outs = None
@@ -1232,6 +1541,8 @@ class LSTMDecoderEx(FairseqIncrementalDecoder):
         self.max_target_positions = max_target_positions
         self.args = args
         self.blank_idx = dictionary.set_blank()
+        # TMP for DEBUGGING
+        print(' - LSTMDecoderEx, setting blank idx to {}'.format(self.blank_idx))
         self.num_masked_tokens = 0
 
         self.adaptive_softmax = None
@@ -1262,6 +1573,7 @@ class LSTMDecoderEx(FairseqIncrementalDecoder):
             for layer in range(num_layers)
         ])
         if attention:
+            # TODO make bias configurable
             self.attention = AttentionLayer(hidden_size, encoder_output_units, hidden_size, bias=False)
         else:
             self.attention = None
@@ -1361,12 +1673,14 @@ class LSTMDecoderEx(FairseqIncrementalDecoder):
         attn_scores = x.new_zeros(srclen, seqlen, bsz) if self.attention is not None else None
         outs = []
 
+        '''print(' *** srclen, seqlen, io-ratio: {}, {}, {}'.format(srclen, seqlen, self.args.io_size_ratio))
+        sys.stdout.flush()'''
         for j in range(seqlen):
             curr_pred = x
             curr_pred_mask = prev_predictions_mask
             if incremental_state is None:
                 dec_idx = j
-                curr_pred = x[:j+1,:,:]
+                curr_pred = x[:j+1,:,:]   # We mask the future 
                 curr_pred_mask = prev_predictions_mask[:j+1,:]
 
             pred_attn, _ = self.pred_attention(prev_hiddens[-1], curr_pred, curr_pred_mask)
@@ -1488,11 +1802,14 @@ class End2EndSLUModel(FairseqEncoderDecoderModel):
         parser.add_argument( '--speech-lstm-size', type=int, default=256, help='Size of the LSTM layers in the encoder' )
         parser.add_argument( '--drop-ratio', type=float, default=0.5, help='Dropout ratio in the encoder' )
         parser.add_argument( '--output-size', type=int, default=512, help='Size of the output-layer of the encoder' )
+        #parser.add_argument( '--load-encoder', type=str, default='None', help='Load a pre-trained (basic) encoder' )
+        #parser.add_argument( '--load-fairseq-encoder', type=str, default='None', help='Load the encoder from a fairseq checkpoint' )
         parser.add_argument( '--match-source-len', action='store_true', default=False, help='For scheduled-sampling decoding, same behavior as for fairseq-generate' )
         parser.add_argument( '--max-lan-a', type=float, default=0.4, help='For scheduled-sampling decoding, same behavior as for fairseq-generate' )
         parser.add_argument( '--max-len-b', type=int, default=10, help='For scheduled-sampling decoding, same behavior as for fairseq-generate' )
-        parser.add_argument( '--freeze-encoder', action='store_true', default=False, help='Freeze encoder parameters, only learns the decoder' ) 
-    
+        parser.add_argument( '--freeze-encoder', action='store_true', default=False, help='Freeze encoder parameters, only learns the decoder' )
+        #parser.add_argument('--pyramid-hidden-layers', type=int, default=1, help='Number of layers in the hidden LSTM stages of the pyramidal encoder')
+
         TransformerModel.add_args(parser)
 
     @classmethod
@@ -1611,14 +1928,23 @@ class End2EndSLUModel(FairseqEncoderDecoderModel):
         
         model = End2EndSLUModel(args, encoder, decoder, tgt_dict)
 
+        # Print the model architecture.
+        #print(model)
+
         if args.load_encoder: 
             print(' - Loading base encoder {}'.format(args.load_encoder))
             sys.stdout.flush()
             model.load_base_encoder( args.load_encoder )
         elif args.load_fairseq_encoder:
-            print(' - Loading base encoder from fairseq checkpoint {}'.format(args.load_fairseq_encoder))
+            if hasattr(task.args, 'decoder'):
+                print(' - Loading base encoder from fairseq checkpoint {}'.format(args.load_fairseq_encoder))
+                sys.stdout.flush()
+                model.load_fairseq_encoder( args.load_fairseq_encoder, task )
+
+        if hasattr(args, 'load_fairseq_decoder') and args.load_fairseq_decoder:
+            print(' - Loading decoder from fairseq checkpoint {}'.format(args.load_fairseq_decoder))
             sys.stdout.flush()
-            model.load_fairseq_encoder( args.load_fairseq_encoder, task )
+            model.load_fairseq_decoder( args.load_fairseq_decoder, task )
 
         return model
 
@@ -1649,7 +1975,10 @@ class End2EndSLUModel(FairseqEncoderDecoderModel):
         self.args = args
         self.dict = tgt_dict
         self.teacher_forcing = True
-        self.scheduled_sampling = False
+        self.scheduled_sampling = False #args.scheduled_sampling
+
+        #self.user_pad = src_tokens.new_zeros(3,args.num_features).fill_(5.0)
+        #self.mach_pad = src_tokens.new_zeros(3,args.num_features).fill_(-5.0)
 
     def num_masked_tokens(self, val=0):
         num_masked = self.decoder.num_masked_tokens
@@ -1785,16 +2114,27 @@ class End2EndSLUModel(FairseqEncoderDecoderModel):
         if not isinstance(self.decoder, LSTMDecoder):
             self.decoder.set_turn_speaker( speakers )
 
-        if self.args.freeze_encoder: 
-            self.encoder.eval()
+        #if self.args.freeze_encoder: 
+        #    self.encoder.eval()
         encoder_out = self.encoder(src_tokens, src_lengths)
-        decoder_out = self.decoder(
-            prev_output_tokens,
-            encoder_out=encoder_out,
-            features_only=False,
-            src_lengths=src_lengths,
-            return_all_hiddens = False,
-        )
+
+        if False: #self.scheduled_sampling:
+            raise NotImplementedError
+            #decoder_out = self._decode(
+            #    prev_output_tokens,
+            #    encoder_out=encoder_out,
+            #    features_only=False,
+            #    src_lengths=src_lengths,
+            #    return_all_hiddens=False,
+            #)
+        else:
+            decoder_out = self.decoder(
+                prev_output_tokens,
+                encoder_out=encoder_out,
+                features_only=False,
+                src_lengths=src_lengths,
+                return_all_hiddens = False,
+            )
 
         return decoder_out
 
@@ -1820,20 +2160,55 @@ class End2EndSLUModel(FairseqEncoderDecoderModel):
 
     def load_fairseq_encoder(self, fsencoder, task):
 
+        if not hasattr(task.args, 'decoder'):
+            return
+
+        print(' - self encoder type: {}'.format(type(self.encoder)))
+        print(' - self decoder type: {}'.format(type(self.decoder)))
+        print(' ---')
+        print(' args: {}'.format(task.args))
+
+        '''models, _model_args = checkpoint_utils.load_model_ensemble(
+            [fsencoder], 
+            task=task,
+        )
+        fs_model = models[0]'''
+        state = torch.load(fsencoder)
+
+        #self.encoder.load_state_dict( state['model'].encoder )
+        self.encoder = checkpoint_utils.load_pretrained_component_from_model(self.encoder, fsencoder) 
+
+        if task.args.decoder == state['args'].decoder:
+            print(' * End2EndSLUModel: pre-initializing also decoder...')
+            sys.stdout.flush()
+            self.decoder = checkpoint_utils.load_pretrained_component_from_model(self.decoder, fsencoder)
+        
+        if self.args.freeze_encoder:
+            print(' * End2EndSLUModel: freezing encoder parameters...')
+            sys.stdout.flush()
+            self.freeze_encoder()
+
+        print(' ====================')
+        sys.stdout.flush()
+
+    def load_fairseq_decoder(self, fsencoder, task):
+
+        print(' - self decoder type: {}'.format(type(self.decoder))) 
+        print(' ---') 
+
         models, _model_args = checkpoint_utils.load_model_ensemble(
             [fsencoder], 
             task=task,
         )
         fs_model = models[0]
-        self.encoder.load_state_dict( fs_model.encoder.state_dict() )
-        if type(fs_model.decoder) == type(self.decoder):
-            self.decoder.load_state_dict( fs_model.decoder.state_dict()) 
-        elif (type(fs_model.decoder) == ICASSPDecoderEx or type(fs_model.decoder) == LSTMDecoderEx) and type(self.decoder) == End2EndSLUDecoder:
-            self.decoder.boundary_decoder.load_state_dict( fs_model.decoder.state_dict() )
-            self.decoder.concept_decoder.load_state_dict( fs_model.decoder.state_dict() )
-        if self.args.freeze_encoder:
-            self.freeze_encoder()
+ 
+        print(' - loaded model decoder type: {}'.format(type(fs_model.decoder)))
+        sys.stdout.flush()
 
+        self.decoder.load_state_dict( fs_model.decoder.state_dict() )
+
+        print(' ####################')
+        sys.stdout.flush()
 
 ### REGISTER THE MODEL FOR USING IN FAIRSEQ ###
 from fairseq.models import register_model_architecture
@@ -1852,8 +2227,11 @@ def end2end_slu_arch(args):
     args.encoder_hidden_dim = getattr(args, 'encoder_hidden_dim', 256)
     args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
     args.decoder_hidden_dim = getattr(args, 'decoder_hidden_dim', 256)
+    #args.load_encoder = getattr(args, 'load_encoder', 'None')
+    #args.load_fairseq_encoder = getattr(args, 'load_fairseq_encoder', 'None')
     args.encoder_transformer_layers = getattr(args, 'encoder_transformer_layers', False)
     args.scheduled_sampling = getattr(args, 'scheduled_sampling', False)
+    args.pyramid_hidden_layers = getattr(args, 'pyramid_hidden_layers', 1)
 
     args.decoder = getattr(args, 'decoder')
     if args.decoder == 'transformer':
