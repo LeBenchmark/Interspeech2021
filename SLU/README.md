@@ -247,7 +247,7 @@ Input features are available [here](http://www.marcodinarelli.it/is2021.php), so
 ```run_end2end_slu_test.sh <checkpoint path> <serialized corpus> <sub-task>```
 
 This will generate an output in the same folder as the checkpoint.
-Pay attention to the option **\<\<sub-task\>\>** argument which will initialize the **--slu-subtask** option in the script to generate the correct reference to compare the system output with.
+Pay attention to the **\<\<sub-task\>\>** argument which will initialize the **--slu-subtask** option in the script to generate the correct reference to compare the system output with.
 
 ### Scoring
 
