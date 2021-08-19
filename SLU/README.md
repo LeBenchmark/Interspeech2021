@@ -219,7 +219,7 @@ Variables:
 - **prefix_list**: the input list, one file per line with absolute path, with or without extension. If the extension is not given, the script will assume '.wav' as the signal extension
 - **flowbert_path**: the absolute path to the wav2vec 2.0 model to use for extracting features. **NOTE**: if you want to extract features with a model finetuned with the [supervised finetuning procedure](https://github.com/pytorch/fairseq/blob/master/examples/wav2vec/README.md#fine-tune-a-pre-trained-model-with-ctc), because of the way Fairseq instantiate and load models, you will need to specify also the model used as fine-tunning starting point in the variable **sv_starting_point**. Since in the end Fairseq initialize parameters with the model specified in **flowbert_path**, the second model can be identical to the first.
 
-Once flags and variables have been set properly, you can run the script simply as *python extract_flowbert_features.py* from command line, making sure the correct python environement with Fairseq 0.10 is active.
+Once flags and variables have been set properly, you can run the script simply as **python extract_flowbert_features.py** from command line, making sure the correct python environement with Fairseq 0.10 is active.
 
 ### Training
 
