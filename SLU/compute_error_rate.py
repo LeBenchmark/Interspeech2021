@@ -3,6 +3,7 @@ import os
 import sys
 import itertools
 import argparse
+import random
 
 import torch
 
@@ -77,7 +78,7 @@ def tsr_edit_distance(ref, hyp):
                 back_track_j -= 1
                 if tmp_weight > 0:
                     n_sub += 1
-        else:
+        else:   # tsr_ed_matrix[i-1,j] >= tsr_ed_matrix[i,j-1]
             if tsr_ed_matrix[i,j-1] < tsr_ed_matrix[i-1,j-1]:
                 n_ins += 1
                 back_track_j -= 1
@@ -117,10 +118,16 @@ def detect_concept_boundaries(concept_idx_lst, indeces):
         elif tok_idx == end_concept_mark:   # 4. found an end, but not preceded by a start => mark the end
             boundaries.append( (end, idx) )
             end = idx
+    #if start != -1 or end < len(concept_idx_lst)-1:
+    #    boundaries.append( (max(start,end), len(concept_idx_lst)) )
     return boundaries
 
 
 def normalize_semantics( concept_idx_lst, scores, indeces, concept_dict, inverse_dict ):
+
+    '''print(' - Normalizing: {}'.format(concept_idx_lst))
+    print('   * tokens: {}'.format(' '.join([inverse_dict[idx] for idx in concept_idx_lst])))
+    sys.stdout.flush()'''
 
     if scores is not None:
         assert len(concept_idx_lst) == len(scores)
@@ -148,15 +155,50 @@ def normalize_semantics( concept_idx_lst, scores, indeces, concept_dict, inverse
                 htoken = inverse_dict[sem]
                 if sem != null_idx and sem != start_concept_mark and sem != end_concept_mark and htoken in concept_dict:
                     if not sem_found:
+                        #res_list.append( sem )
                         best_sem = sem
                         best_score = score
                         sem_found = True
                     else:
+                        #print(' * Current res_list: {}'.format(res_list))
+                        #print(' * Found multiple concept hypotheses in the same chunk: {}@{} vs. {}@{}'.format(inverse_dict[sem], score, inverse_dict[best_sem], best_score))
+                        #sys.stdout.flush()
                         if score_comp(score, best_score):
                             best_score = score
                             best_sem = sem
             if sem_found:
                 res_list.append(best_sem)
+            '''if not sem_found:
+                print(' *** WARNING: NO CONCEPT FOUND IN CURRENT CHUNK')
+                sys.stdout.flush()'''
+
+        '''prev_idx = -1
+        prev_end_mark = 0
+        res_list = []
+        for c_lst_idx, i in enumerate(concept_idx_lst):
+            if i == end_concept_mark:
+                sem_found = False
+                for sem_idx in range(c_lst_idx-1,prev_end_mark,-1):
+                    #if prev_idx != -1 and prev_idx != null_idx and prev_idx != start_concept_mark and prev_idx != end_concept_mark:
+                    sem = concept_idx_lst[sem_idx]
+                    htoken = inverse_dict[sem]
+
+                    print(' *** Inspecting token {} for SLU'.format(htoken))
+                    print('     - In concept dict ? {}'.format(htoken in concept_dict))
+                    sys.stdout.flush()
+
+                    if sem != null_idx and sem != start_concept_mark and sem != end_concept_mark and htoken in concept_dict:
+                        if not sem_found:
+                            res_list.append( sem )
+                            sem_found = True
+                        else:
+                            print(' * Found multiple concept hypotheses in the same chunk: {} (token {})'.format(res_list[-1], inverse_dict[res_list[-1]]))
+                            sys.stdout.flush()
+                if not sem_found:
+                    print(' *** WARNING: no concept found for current chunk!')
+                    sys.stdout.flush()
+                prev_end_mark = c_lst_idx
+            prev_idx = i'''
         return res_list
     elif null_idx != -1:
         res_list = []
@@ -189,10 +231,10 @@ def compute_wer(hyp, scores, ref, indeces, concept_dict, inverse_dict):
     # The following statements are for cleaning the model output from CTC alignment mess, don't needed if another loss is used.
     remove_duplicates = cleaning_flag
     if remove_duplicates:
-        if reverse_clean: 
+        if reverse_clean:
             # 2. We remove duplicate items
             tmp_lst = [i.item() for i in output_idx]
-            nodouble_lst = [k for k,g in itertools.groupby(tmp_lst)]
+            nodouble_lst = [k for k,g in itertools.groupby(tmp_lst)] 
 
             new_scores = []
             if scores is not None:
@@ -201,11 +243,13 @@ def compute_wer(hyp, scores, ref, indeces, concept_dict, inverse_dict):
                     new_scores.append( min( [scores[idx] for idx in els_idx] ) )
                 assert len(new_scores) == len(nodouble_lst) 
 
-            output_hyp = torch.LongTensor( nodouble_lst )
+            output_hyp = torch.LongTensor( nodouble_lst ) 
+
             # 1. We remove blanks
             nonzero_idx = (output_hyp != blank_idx).nonzero()
             nonzero_idx = nonzero_idx.view(-1)
-            output_hyp = output_hyp[nonzero_idx].type(ref.type())
+            output_hyp = output_hyp[nonzero_idx].type(ref.type()) 
+
             if scores is not None:
                 new_scores = [new_scores[idx.item()] for idx in nonzero_idx]
             else:
@@ -234,6 +278,20 @@ def compute_wer(hyp, scores, ref, indeces, concept_dict, inverse_dict):
         return (clean_hyp.size(0), 0, 0, ref.size(0)), [output_hyp, clean_hyp, ref], clean_hyp.size(0)
 
 
+def run_bootstrap(X, B=1000):
+
+    s=2*len(X)
+    W_bootsample = []
+    for b in range(B):
+        bootstrap_sample = []
+        for j in range(s):
+            bootstrap_sample.append( X[random.randrange(0,len(X))] )
+        W_starb = sum([t[0] for t in bootstrap_sample]) / sum([t[1] for t in bootstrap_sample])
+        W_bootsample.append(W_starb)
+
+    W_boot = sum(W_bootsample)/B
+    SE_boot = (sum([(w - W_boot)**2 for w in W_bootsample]) / (B-1))**0.5
+    return W_boot, SE_boot
 
 dict = {}
 inv_dict = {}
@@ -297,7 +355,8 @@ hyp_tokens = 0
 f = open(args.hyp)
 for line in f:
     line = line.rstrip("\r\n")
-    tokens = line.split()
+    tokens = line.split() 
+    #tokens = preprocess_hyp(tokens)
     hyp_tokens += len(tokens)
     for t in tokens:
         if not t in dict:
@@ -333,7 +392,9 @@ if len(refs) != len(hyps):
 
 total_er = [0,0,0]
 total_toks = 0
+bootstrap_stats = []
 
+# (blank_idx, start_concept_mark, end_concept_mark, null_idx, cleaning_flag)
 blank_idx = dict[blank_token]
 null_idx = dict[void_concept]
 sos_idx = dict[bos_token]
@@ -356,6 +417,7 @@ for idx in range(len(refs)):
 
     (res, seq, nonzeros) = compute_wer(hyps[idx], sc, refs[idx], indeces, sem_dict, inv_dict)
     I, D, S, toks = res
+    bootstrap_stats.append( (I+D+S, toks) )
     total_er[0] += I
     total_er[1] += D
     total_er[2] += S
@@ -383,6 +445,12 @@ for t in scored_seqs:
     f.write(' - WER' + str(t[2]) + '\n\n')
 f.close()
 
+output_file = args.hyp + '.bs-samples'
+f = open(output_file, 'w')
+for t in bootstrap_stats:
+    print('{} {}'.format(t[0], t[1]), file=f)
+f.close()
+
 if total_toks == 0:
     total_toks = 1
     total_er = (0.33,0.33,0.34)
@@ -395,9 +463,12 @@ print('   * Total % corretc: {:.3f}%'.format( 100.0 - float(sum(total_er[1:]))*1
 print(' ***')
 sys.stdout.flush()
 
+print('')
+print(' * Running bootstrap significance test...')
+W_boot, SE_boot = run_bootstrap(bootstrap_stats)
 
-
-
+print('   * W_boot: {:.5f} (+/- {:.5f})'.format(W_boot, 1.64*SE_boot))
+print('')
 
 
 
