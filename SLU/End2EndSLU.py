@@ -12,6 +12,22 @@ from fairseq.tasks import FairseqTask, register_task
 
 import examples.speech_recognition.criterions.SLU_CTC_loss as slu_ctc
 
+'''# Make these symbols global
+SOS_tag = 'SOS'
+blank_token = "__"
+pad_token = '_'
+pad_char = pad_token
+EOS_tag = 'EOS'
+unk_token = '<unk>'
+machine_semantic = 'MachineSemantic'
+slu_start_concept_mark = '_SOC_'
+slu_end_concept_mark = '_EOC_'
+user_ID = 'User'
+machine_ID = 'Machine'
+
+LOSS_INIT_VALUE=999999.9
+ER_INIT_VALUE=LOSS_INIT_VALUE'''
+
 class SLUDictionary(Dictionary):
     """Dictionary wrapping to initialize a dictionary from a raw python dictionary"""
 
@@ -167,8 +183,8 @@ def parse_media_semantic_annotation(filename):
         turn_ID = ID_tokens[-1]
         concepts_str = clean_re.sub('', ' '.join(tokens[1:]))
 
-        print(' - parse_media_semantic_annotation, dialog_ID and turn_ID: {}, {}'.format(dialog_ID, turn_ID))
-        sys.stdout.flush()
+        #print(' - parse_media_semantic_annotation, dialog_ID and turn_ID: {}, {}'.format(dialog_ID, turn_ID))
+        #sys.stdout.flush()
 
         TurnStruct = {}
         TurnStruct['ID'] = turn_ID
@@ -224,6 +240,7 @@ def read_dialog_data(TurnList, args):
     windowtime = args.window_time 
     reduce_flag = args.reduce_signal
     lan_flag = args.w2v_language
+    feat_ext = args.feature_extension
 
     if windowtime < 0:
         srate_str = '16kHz'
@@ -232,17 +249,20 @@ def read_dialog_data(TurnList, args):
         if windowtime > -3:
             print(' * read_dialog_data: reading {} wave2vec features...'.format(srate_str))
         elif windowtime == -3:
-            print(' * read_dialog_data: reading FlowBERT features (.fbert files)...')
+            print(' * read_dialog_data: reading FlowBERT features ({} files)...'.format(feat_ext))
         elif windowtime == -4:
-            print(' * read_dialog_data: reading W2V2 base features (.bebert files)...')
+            print(' * read_dialog_data: reading W2V2 base features ({} files)...'.format(feat_ext))
         elif windowtime == -5:
-            print(' * read_dialog_data: reading FlowBERT base features (.bbert files)...')
+            print(' * read_dialog_data: reading FlowBERT base features ({} files)...'.format(feat_ext))
         elif windowtime == -6:
-            print(' * read_dialog_data: reading W2V2 large features (.ebert files)...')
+            print(' * read_dialog_data: reading W2V2 large features ({} files)...'.format(feat_ext))
         elif windowtime == -7:
-            print(' * read_dialog_data: reading XLSR53 large features (.xbert files)...')
+            print(' * read_dialog_data: reading XLSR53 large features ({} files)...'.format(feat_ext))
         else:
             raise NotImplementedError()
+        sys.stdout.flush()
+    else:
+        print(' * read_dialog_data: reading {} feature files'.format(feat_ext))
         sys.stdout.flush()
 
     dialog_data = {}
@@ -262,10 +282,14 @@ def read_dialog_data(TurnList, args):
 
         # 2. Spectrogram of the turn audio signal (the input to the network)
         if windowtime == 20:
-            file_ext = '.8kHz.20.0ms-spg'
-            spg_tsr = torch.load(turn.strip() + file_ext)
+            #file_ext = '.8kHz.20.0ms-spg'
+            #file_ext = '.8kHz.20.0ms-mfcc'
+            #if args.corpus_name == 'fsc':
+            #    file_ext = '.16kHz' + file_ext
+            spg_tsr = torch.load(turn.strip() + feat_ext)
         elif windowtime == 10:
             raise NotImplementedError
+            #spg_tsr = torch.load(turn.strip() + '.10.0ms-spg')
         elif windowtime < 0:
             srate_str = '16kHz'
             if windowtime == -2:
@@ -275,7 +299,9 @@ def read_dialog_data(TurnList, args):
                 lan='-Fr'
             if windowtime > -3:
                 spg_tsr = torch.load(turn.strip() + '.' + srate_str + lan + '.w2v')
-            elif windowtime == -3:
+            else:
+                spg_tsr = torch.load(turn.strip() + feat_ext)
+            '''elif windowtime == -3:
                 spg_tsr = torch.load(turn.strip() + '.fbert')
             elif windowtime == -4: 
                 spg_tsr = torch.load(turn.strip() + '.ebert')
@@ -284,9 +310,10 @@ def read_dialog_data(TurnList, args):
             elif windowtime == -6:
                 spg_tsr = torch.load(turn.strip() + '.bebert')
             elif windowtime == -7:
-                spg_tsr = torch.load(turn.strip() + '.xbert')
+                spg_tsr = torch.load(turn.strip() + '.xbert')'''
             if reduce_flag > 1:
                 raise NotImplementedError
+                #spg_tsr = Sf.reduce( spg_tsr.squeeze(), reduce_flag )
 
         if windowtime > -3:
             spg_tsr = spg_tsr.squeeze().permute(1,0)
@@ -294,6 +321,10 @@ def read_dialog_data(TurnList, args):
             spg_tsr = spg_tsr.squeeze() 
         if len(spg_tsr.size()) != 2:
             spg_tsr = spg_tsr.unsqueeze(0)
+
+        #print(' - read_dialog_data, read spectrogram shape: {}'.format(spg_tsr.size()))
+        #sys.stdout.flush()
+        #sys.exit(0)
 
         if spg_tsr.size(0) < 3:
             print(' *** read_dialog_data: got strangely short signal {}...'.format(spg_tsr.size()))
@@ -397,6 +428,8 @@ class End2EndSLU(FairseqTask):
                             help='file prefix for data')
         parser.add_argument('--serialized-data', type=str,
                             help='file containing the serialized corpus (with a previous torch.save)')
+        parser.add_argument('--load-dictionary', type=str,
+                            help='Load the dictionary for the task symbols from the specified file')
         parser.add_argument('--max-source-positions', default=10000, type=int,
                             help='max input length')
         parser.add_argument('--max-target-positions', default=1024, type=int,
@@ -427,8 +460,13 @@ class End2EndSLU(FairseqTask):
                             help='Specify the corpus name to customize the data reading. 1) media (default), 2) fsc (fluent speech commands)')
         parser.add_argument( '--load-encoder', type=str, help='Load a pre-trained (basic) encoder' )
         parser.add_argument( '--load-fairseq-encoder', type=str, help='Load the encoder from a fairseq checkpoint' )
+        parser.add_argument( '--load-fairseq-decoder', type=str, help='Load the decoder from a fairseq checkpoint' )
         parser.add_argument( '--slu-end2end', action='store_true', default=False, help='Add an auxiliary loss for an additional output expected in the model output structure' )
         parser.add_argument('--scheduled-sampling', action='store_true', default=False, help='Use scheduled sampling during training')
+        parser.add_argument('--encoder-state-window', type=int, default=2, help='Size w of the window of encoder states attended by the cross attention')
+        parser.add_argument('--pyramid-hidden-layers', type=int, default=2, help='Number of layers in the hidden LSTM stages of the pyramidal encoder')
+        parser.add_argument('--prev-prediction-query', type=int, default=-1, help='Index of the decoder hidden state used as query on the previous predictions')
+        parser.add_argument('--feature-extension', type=str, default='.20.0ms-spg', help='Extenion of the feature file name')
 
     @classmethod
     def setup_task(cls, args, **kwargs):
@@ -446,6 +484,7 @@ class End2EndSLU(FairseqTask):
         )
         # NOTE: we are ogliged to initialize the Dictionary as it is requested in Fairseq,
         #       but then we reset it and re-add symbols so that to have index 0 for the blank token, as needed by the CTC loss.
+        #       (Added later: the index of the blank token to be passed to the CTC loss can be actually customized)
         label_vocab.reset() 
         label_vocab.set_blank(blank_token)
         label_vocab.set_pad_(pad_token)
@@ -457,6 +496,13 @@ class End2EndSLU(FairseqTask):
         label_vocab.add_symbol(slu_start_concept_mark)
         label_vocab.add_symbol(slu_end_concept_mark)
         label_vocab.set_nspecial_()  # We set the tokens added so far as being special tokens.
+
+        if args.load_dictionary:
+            if os.path.exists(args.load_dictionary) and os.path.isfile(args.load_dictionary):
+                print(' - Loading serialized dictionary...')
+                sys.stdout.flush()
+
+                label_vocab = torch.load(args.load_dictionary)
 
         print('| [label] dictionary: {} types'.format(len(label_vocab)))
         
@@ -473,6 +519,15 @@ class End2EndSLU(FairseqTask):
         self.eos_tag_idx = label_vocab.index( EOS_tag )
         self.slu_start_concept_idx = label_vocab.index( slu_start_concept_mark )
         self.slu_end_concept_idx = label_vocab.index( slu_end_concept_mark )
+
+        '''print(' ***** End2EndSLU task initialization...')
+        print(' *** SLU task: blank-idx {}'.format(self.blank_idx))
+        print(' *** SLU task: sos_tag_idx {}'.format(self.sos_tag_idx))
+        print(' *** SLU task: eos_tag_idx {}'.format(self.eos_tag_idx))
+        print(' *** SLU task: slu_start_concept_idx {}'.format(self.slu_start_concept_idx))
+        print(' *** SLU task: slu_end_concept_idx {}'.format(self.slu_end_concept_idx))
+        print(' *** SLU task: pad index {}'.format(self.label_vocab.index(pad_token)))
+        sys.stdout.flush()'''
 
         # Scheduled sampling state and needed values
         self.criterion = args.criterion
@@ -556,8 +611,12 @@ class End2EndSLU(FairseqTask):
         self.curr_epoch += 1
         if self.curr_epoch <= 3:
             self.datasets['train'].curriculum(value=True)
+            #print(' End2EndSLU, setting curriculum learning to True')
+            #sys.stdout.flush()
         if self.curr_epoch > 3:
             self.datasets['train'].curriculum(value=False)
+            #print(' End2EndSLU, setting curriculum learning to False')
+            #sys.stdout.flush() 
 
         if epoch > 1:
             self.init_ss_threshold *= 0.98
@@ -587,6 +646,9 @@ class End2EndSLU(FairseqTask):
                 self.best_dev_loss = self.curr_dev_loss
             if self.best_dev_er > self.curr_dev_er:
                 self.best_dev_er = self.curr_dev_er
+                # Reset some ss state values
+            #else:
+                # Set some ss values
 
         self.curr_train_loss = 0.0
         self.curr_dev_loss = 0.0
@@ -613,6 +675,9 @@ class End2EndSLU(FairseqTask):
 
         padder = torch.zeros(3, dim).fill_(spk_val).to(feats)
         return torch.cat( [padder, feats, padder], 0 )
+
+        #spk_mark = torch.zeros_like(feats).fill_(spk_val)
+        #return feats + spk_mark
 
     def load_dataset(self, split, **kwargs):
     
@@ -668,11 +733,16 @@ class End2EndSLU(FairseqTask):
             torch.save(train_data, self.args.serialized_data + '.train' )
             torch.save(dev_data, self.args.serialized_data + '.dev' )
             torch.save(test_data, self.args.serialized_data + '.test' )
-            torch.save(self.label_vocab, self.args.serialized_data + '.dict' )
-
+            if self.args.load_dictionary:
+                torch.save(self.label_vocab, self.args.load_dictionary)
+            else:
+                torch.save(self.label_vocab, self.args.serialized_data + '.dict' )
 
         if not 'dictionary' in corpus:
-            corpus['dictionary'] = torch.load(self.args.serialized_data + '.dict')
+            if self.args.load_dictionary:
+                corpus['dictionary'] = torch.load(self.args.load_dictionary)
+            else:
+                corpus['dictionary'] = torch.load(self.args.serialized_data + '.dict')
             self.label_vocab = corpus['dictionary'] 
             print(' - Loaded dictionary size: {}'.format(len(self.label_vocab)))
             sys.stdout.flush()
@@ -688,6 +758,15 @@ class End2EndSLU(FairseqTask):
         # data for each turn are: turn-id, signal-tensor, char-sequence (int) tensor, token-sequence (int) tensor, concept-sequence (int) tensor, speaker-id (machine or user)
         # data are organized as a dict of lists: the dict is indexed with dialog-id, the value is the list of turns for that dialog, each turn structure contains data described above.
 
+        '''print(' ***** End2End SLU task, {} split data loading...'.format(my_split))
+        print(' *** SLU task: blank-idx {}'.format(self.blank_idx))
+        print(' *** SLU task: sos_tag_idx {}'.format(self.sos_tag_idx))
+        print(' *** SLU task: eos_tag_idx {}'.format(self.eos_tag_idx))
+        print(' *** SLU task: slu_start_concept_idx {}'.format(self.slu_start_concept_idx))
+        print(' *** SLU task: slu_end_concept_idx {}'.format(self.slu_end_concept_idx))
+        print(' *** SLU task: pad index {}'.format(self.label_vocab.index(pad_token)))
+        sys.stdout.flush()''' 
+
         print(' - Reorganizing {} dialog data...'.format(my_split))
         if self.args.user_only:
             print('   - Loading user turns only.') 
@@ -701,6 +780,9 @@ class End2EndSLU(FairseqTask):
                 bsz = int(bsz / 2)
             if self.args.max_sentences == 5:
                 bsz = 5
+
+        print(' - Approximating batch size to {} from {}'.format(bsz, self.args.max_sentences))
+        sys.stdout.flush()
         batch_info = create_dialog_batches_(dialogs, bsz)
         idx_batches = []
 
@@ -710,17 +792,30 @@ class End2EndSLU(FairseqTask):
         targets = []
         tgt_lengths = []
         global_turn_idx = 0
+        #for dialog_id in dialogs.keys():
         for batch in batch_info:
+            #for turn in turns:
             batched_turns_idx = []
             for (did, idx) in batch:
                 turn = dialogs[did][idx]
                 if (my_split == 'train') or (turn[-1] == user_ID):
+                    #if turn[-1] == user_ID:
+                    # if (not self.args.user_only and (my_split == 'train' or turn[-1] == user_ID)) or (self.args.user_only and turn[-1] == user_ID)
                     feats = turn[1]
                     feats = self.add_speaker_marker(feats, turn[-1])
                     sources.append( feats )
-                    src_lengths.append( feats.size(0) )
+                    src_lengths.append( feats.size(0) ) 
+
+                    '''print(' - End2EndSLU task data shapes:')
+                    print('   - feats shape: {}'.format(feats.size()))
+                    print('   - char seq shape: {}'.format(turn[2].size()))
+                    print('   - token seq shape: {}'.format(turn[3].size()))
+                    print('   - slu seq shape: {}'.format(turn[4].size()))
+                    print(' -----')
+                    sys.stdout.flush()'''
 
                     batched_turns_idx.append( (global_turn_idx, turn[-1]) )
+                    #batched_turns_idx.append( global_turn_idx )
                     global_turn_idx += 1
 
                     if self.args.slu_subtask == 'char':
@@ -743,8 +838,19 @@ class End2EndSLU(FairseqTask):
 
                     else:
                         raise NotImplementedError
-            
-            idx_batches.append( batched_turns_idx )
+                else:
+                    t = turn[1]
+                    del t
+                    t = turn[2]
+                    del t
+                    t = turn[3]
+                    del t
+                    t = turn[4]
+                    del t
+                    dialogs[did][idx] = None
+
+            if len(batched_turns_idx) > 0:
+                idx_batches.append( batched_turns_idx )
 
         print(' - Reorganized {} turns for split {}'.format(global_turn_idx, my_split))
         sys.stdout.flush()
@@ -767,6 +873,9 @@ class End2EndSLU(FairseqTask):
         sys.stdout.flush()
     
         # Reorganize turns based on increasing source length for curriculum learning
+        #src_info = []
+        #for i in range(len(sources)):
+        #    src_info.append( (i, sources[i].size(0)) )
         src_info = [(i, sources[i].size(0)) for i in range(len(sources))]
         sorted_structure = sorted(src_info, key=lambda tuple: tuple[1])
         sources = [sources[t[0]] for t in sorted_structure]
@@ -790,6 +899,9 @@ class End2EndSLU(FairseqTask):
             shuffle=True,
         )
 
+        #if split == 'train':
+        #    self.datasets['train'].curriculum(value=True)
+
     def max_positions(self):
         """Return the max input length allowed by the task."""
         # The source should be less than *args.max_positions* and the "target"
@@ -800,6 +912,30 @@ class End2EndSLU(FairseqTask):
     def target_dictionary(self):
         """Return the target :class:`~fairseq.data.Dictionary`."""
         return self.label_vocab
+
+    # We could override this method if we wanted more control over how batches
+    # are constructed, but it's not necessary for this tutorial since we can
+    # reuse the batching provided by LanguagePairDataset.
+    #
+    # def get_batch_iterator(
+    #     self, dataset, max_tokens=None, max_sentences=None, max_positions=None,
+    #     ignore_invalid_inputs=False, required_batch_size_multiple=1,
+    #     seed=1, num_shards=1, shard_id=0,
+    # ):
+    #     (...)
+
+    #def build_generator(self, args):
+    #    from fairseq.slu_sequence_generator import SLUSequenceGenerator
+
+    #    print(' * End2End SLU task: using SLUSequenceGenerator')
+    #    sys.stdout.flush()
+
+    #    return SLUSequenceGenerator(
+    #        self.target_dictionary,
+    #        max_len_a=getattr(args, "max_len_a", 0),
+    #        max_len_b=getattr(args, "max_len_b", 200),
+    #    )
+
 
 
 
