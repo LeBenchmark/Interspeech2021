@@ -204,6 +204,7 @@ Input features used for our [Interspeech 2021 paper](https://arxiv.org/abs/2104.
 
 If you want extract to features on your own with your wav2vec 2.0 models, you can use the **extract_flowbert_features.py** script.
 Since features are extracted once for all, I did not add command line options to the script, you need to modify flags and variables in the script.
+Some models used to extract features are reachable via links in the table above, or from our [HuggingFace repository](https://huggingface.co/LeBenchmark).
 
 Flags:
 - **upsample**: if set to True, the script will upsample signals to twice the sample rate (this is because MEDIA is 8kHz but 16kHz signals are needed)
@@ -243,10 +244,10 @@ Input features are available [here](http://www.marcodinarelli.it/is2021.php), so
 
 ### Generation
 
-```run_end2end_slu_test.sh <checkpoint path> <serialized corpus>```
+```run_end2end_slu_test.sh <checkpoint path> <serialized corpus> <sub-task>```
 
 This will generate an output in the same folder as the checkpoint.
-Pay attention again to the option **--slu-subtask** in the script to generate the correct reference to compare the system output with.
+Pay attention to the option **<<sub-task>>** argument which will initialize the **--slu-subtask** option in the script to generate the correct reference to compare the system output with.
 
 ### Scoring
 
