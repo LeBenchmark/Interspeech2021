@@ -2,7 +2,7 @@
 
 DECORE0_ID="_decore0"
 source ${HOME}/work/tools/venv_python3.7.2_torch1.4${DECORE0_ID}/bin/activate
-script_path=${HOME}/work/tools/fairseq_tools/end2end_slu/
+script_path=${HOME}/work/tools/fairseq_tools/end2end_slu/scripts/
 
 model_output=$1
 
@@ -15,4 +15,5 @@ grep "^P\-" ${model_output} | cut -f 2- > ${model_output}.scores
 # --slu-out keeps only concepts from the raw output. Use this option if you want to score the model with Concept Error Rate (CER)
 python ${script_path}/compute_error_rate.py --slu-out --clean-hyp --ref ${model_output}.ref --hyp ${model_output}.hyp --slu-scores ${model_output}.scores
 
+deactivate
 
