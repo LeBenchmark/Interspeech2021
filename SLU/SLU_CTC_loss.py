@@ -65,6 +65,9 @@ def compute_ctc_uer(logprobs, targets, input_lengths, target_lengths, blank_idx)
                 nonblanks.append(p)
         predicted = nonblanks
 
+        #dedup predictions
+        #predicted = [p[0] for p in groupby(predicted)]
+
         # compute the alignment based on EditDistance
         alignment = EditDistance(False).align(
             arr_to_toks(predicted), arr_to_toks(target)
@@ -83,6 +86,7 @@ def compute_ctc_uer(logprobs, targets, input_lengths, target_lengths, blank_idx)
     return batch_errors, batch_total, hyps, refs
 
 
+#@register_criterion("slubase_ctc_loss")
 class SLUBaseCTCCriterion(FairseqCriterion):
     def __init__(self, args, task):
         super().__init__(task)
@@ -94,6 +98,7 @@ class SLUBaseCTCCriterion(FairseqCriterion):
         self.end_concept = self.dictionary.add_symbol(slu_end_concept_mark)
 
         if args.slu_end2end:
+            #self.aux_loss = CrossEntropyCriterion(task, False)
             self.aux_loss = torch.nn.CTCLoss(blank=self.blank_idx, reduction='sum', zero_infinity=True)
         else:
             self.aux_loss = None
@@ -130,8 +135,11 @@ class SLUBaseCTCCriterion(FairseqCriterion):
         batch_first = True
         (N, T, C) = bound_lprobs.size()  
         bound_input_lengths = torch.full(size=(N,), fill_value=T, dtype=torch.long).to(bound_lprobs.device)
+        #input_lengths = encoder_padding_mask_to_lengths(
+        #    net_output["encoder_padding_mask"], max_seq_len, bsz, device
+        #)  # Decoder output doesn't contain 'encoder_padding_mask', see the NOTE above
         bound_target_lengths = sample["target_lengths"]
-        bound_targets = sample["target"] 
+        bound_targets = sample["target"]    # B x T 
 
         if batch_first:
             # N T D -> T N D (F.ctc_loss expects this) 
@@ -139,6 +147,9 @@ class SLUBaseCTCCriterion(FairseqCriterion):
 
         pad_mask = sample["target"] != self.pad_idx
         bound_targets_flat = bound_targets.masked_select(pad_mask)
+
+        #print('  *** Loss, bound_input_lengths shape: {}'.format(bound_input_lengths.size()))
+        #sys.stdout.flush()
         
         loss = self.loss_function(
             bound_lprobs,
@@ -147,16 +158,37 @@ class SLUBaseCTCCriterion(FairseqCriterion):
             bound_target_lengths,
         )
 
+        '''print(' *** CTC Loss, predicted and expected output shape:')
+        print('   * Predicted: {}'.format(bound_lprobs.size()))
+        print('   * Expected: {}'.format(bound_targets.size()))
+        print(' *** CTC Loss.')
+        sys.stdout.flush()'''
+
         if self.aux_loss is not None and sem_output is not None:
+            #print(' *** Computing auxiliary loss...')
+            #sys.stdout.flush()
+
             aux_net_output = (sem_output, None)
             sem_lprobs = model.get_normalized_probs(aux_net_output, log_probs=log_probs)
             sem_targets, sem_target_lengths = extract_concepts(bound_targets, self.dictionary.bos(), self.dictionary.eos(), self.dictionary.pad(), self.end_concept, move_trail=False)
             (aB, aT, aC) = sem_lprobs.size()
 
+            #print('  *** Loss, sem_lprobs shape: {} x {} x {}'.format(aB, aT, aC))
+            #sys.stdout.flush()
+
             sem_input_lengths = torch.full(size=(aB,), fill_value=aT, dtype=torch.long).to(sem_lprobs.device)
             if batch_first:
                 sem_lprobs = sem_lprobs.transpose(0, 1)
 
+            #print('  *** Loss, sem_input_lengths shape: {}'.format(sem_input_lengths.size()))
+            #sys.stdout.flush()
+
+            '''aux_loss = F.nll_loss(
+                sem_lprobs.view(aB*aT, -1),
+                sem_targets.view(aB*aT),
+                ignore_index = self.aux_loss.padding_idx,
+                reduction = 'sum' if reduce else 'none'
+            )'''
             aux_loss = self.aux_loss(
                 sem_lprobs,
                 sem_targets,
@@ -176,6 +208,13 @@ class SLUBaseCTCCriterion(FairseqCriterion):
 
         batch_error_rate = float(errors) #/ (float(total) - pad_count)
         ber = torch.Tensor( [batch_error_rate] )
+
+        #if self.args.sentence_avg:
+        #    sample_size = sample["target"].size(0)
+        #else:
+            #if self.args.use_source_side_sample_size:
+            #    sample_size = torch.sum(input_lengths).item()
+            #else:
  
         sample_size = sample["ntokens"] -pad_count # if the reference is padded with bos and eos, do not account for them.
         logging_output = {
@@ -190,6 +229,9 @@ class SLUBaseCTCCriterion(FairseqCriterion):
             "target" : refs,
             "nframes": torch.sum(sample["net_input"]["src_lengths"]).item(),
         }
+
+        #print(' - SLUCTCCriterion, loss computed, lprobs shape: {}'.format(lprobs.size()))
+        #sys.stdout.flush() 
 
         return loss, sample_size, logging_output
 
@@ -235,6 +277,7 @@ class SLUBaseCTCCriterion(FairseqCriterion):
         metrics.log_scalar('nframes', nframes)
         metrics.log_scalar('sample_size', sample_size)
 
+
 @register_criterion("slu_ctc_loss")
 class SLUCTCCriterion(SLUBaseCTCCriterion):
 
@@ -244,6 +287,17 @@ class SLUCTCCriterion(SLUBaseCTCCriterion):
         self.blank_idx = task.blank_idx
         self.eos_idx = task.label_vocab.eos()
         self.loss_function = torch.nn.CTCLoss(blank=self.blank_idx, reduction='sum',zero_infinity=True)
+
+        '''if args.slu_end2end:
+            print(' * SLUCTCCriterion, using an auxiliary loss for end2end SLU')
+            sys.stdout.flush()
+            #self.aux_loss = CrossEntropyCriterion(task, False)
+            self.aux_loss = torch.nn.CTCLoss(blank=self.blank_idx, reduction='sum', zero_infinity=True)
+        else:
+            self.aux_loss = None'''
+
+        print(' - SLUCTCCriterion, initialized blank idx as {}'.format(self.blank_idx))
+        sys.stdout.flush()
 
     @staticmethod
     def add_args(parser):
