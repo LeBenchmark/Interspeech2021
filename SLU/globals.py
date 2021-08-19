@@ -2,6 +2,7 @@
 import sys
 import torch
 
+# Make these symbols global
 SOS_tag = 'SOS'
 blank_token = "__"
 pad_token = '_'
