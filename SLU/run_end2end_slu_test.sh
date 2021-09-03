@@ -1,18 +1,8 @@
 #!/bin/bash
 
-#CUDA_VAR="CUDA_VISIBLE_DEVICES=1"
-# TO RUN ON DECORE AND OTHER SERVERS UNCOMMENT THE FOLLOWING LINES
-#export FAIRSEQ_PATH=${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/
-#export PYTHONPATH=${HOME}/anaconda3/
-
-# TO RUN ON THE LIG GRID WITH OAR UNCOMMENT THE FOLLOWING LINES
 source ${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/activate 
 export FAIRSEQ_PATH=${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/
 export PYTHONPATH=${PYTHONPATH}:${HOME}/work/tools/fairseq/
-
-
-
-export RNNTAGGERPATH=${HOME}/work/tools/Seq2Biseq_End2EndSLU/
 
 echo " ---"
 echo " * Using python: `which python`"
@@ -30,8 +20,7 @@ if [[ $# -eq 3 ]]; then
 	SUBTASK=$3
 fi
 
-CRITERION='cross_entropy' # Use 'slu_ctc_loss' for CTC loss, 'cross_entropy' for Cross Entropy loss
-
+CRITERION='cross_entropy'
 CHECKPOINT=checkpoints/checkpoint_best.pt
 if [[ $# -ge 1 ]]; then
 	CHECKPOINT=$1
@@ -65,7 +54,4 @@ CUDA_VISIBLE_DEVICES=1 ${FAIRSEQ_PATH}/fairseq-generate ${DATA_PATH} \
 	| tee ${CHECKPOINT_DIR}/generate-test.txt
 
 deactivate
-#conda deactivate
-
-
 

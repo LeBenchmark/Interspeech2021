@@ -1,24 +1,17 @@
 #!/bin/bash
 
-# TO RUN ON DECORE AND OTHER SERVERS UNCOMMENT THE FOLLOWING LINES
-#export FAIRSEQ_PATH=${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/
-#export PYTHONPATH=${HOME}/anaconda3/
-
-# TO RUN ON THE LIG GRID WITH OAR UNCOMMENT THE FOLLOWING LINES
 source ${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/activate 
 FAIRSEQ_PATH=${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/
-#PYTHONPATH=${HOME}/work/tools/fairseq/
-export RNNTAGGERPATH=${HOME}/work/tools/Seq2Biseq_End2EndSLU/
 
 echo " ---"
 echo "Using python: `which python`"
 echo " ---"
 
 # -----------------
-FEATURES_TYPE='XLSR53'	# Use 'spectro', 'normspectro' or 'W2V' or 'W2V2' or 'FlowBERT' or 'FlowBBERT' ... see below
-FEATURES_SPEC='-SV'		# Choose a meaningful infix to add into file names, you can leave it empty for spectrograms (*-spg)
-FEATURES_EXTN='.xlsr53-sv'	# Feature file extension, e.g. '.20.0ms-spg', '.bert-3kb', '.bert-3kl', '.bert-3klt', ...
-FEATURES_LANG='ML'		# Use 'Fr' or 'En' ('En' only with 'W2V')
+FEATURES_TYPE='spectro'	# Use 'spectro', 'normspectro' or 'W2V' or 'W2V2' or 'FlowBERT' or 'FlowBBERT' ... see below
+FEATURES_SPEC=''		# Choose a meaningful infix to add into file names, you can leave it empty for spectrograms (*-spg)
+FEATURES_EXTN='.20.0ms-spg'	# Feature file extension, e.g. '.20.0ms-spg', '.bert-3kb', '.bert-3kl', '.bert-3klt', ...
+FEATURES_LANG='Fr'		# Use 'Fr' or 'En' ('En' only with 'W2V')
 NORMFLAG='Normalized'
 SUBTASK='concept'
 CORPUS='media'
@@ -92,45 +85,12 @@ if [[ $# -ge 2 ]]; then
 	SAVE_PATH=${2}_LR${LR}/
 fi
 
-# Basic token models
-um_spg_token_decoder_file='./IS2021/experiments/Ziggurat_Dec-basic-token_media_Drop0.5_spectro-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_TEST/checkpoint.best_avg5.pt'
-um_w2v2frMlarge_token_decoder_file='./Ziggurat_Dec-basic-token_media_Drop0.5_FlowBERT-M-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_TEST//checkpoint.best_avg5.pt'
-um_w2v2fr7Klarge_token_decoder_file='./Ziggurat_Dec-basic-token_media_Drop0.5_FlowBERT-7Kl-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_NewLoad_TEST/checkpoint.best_avg5.pt'
-
-# Sequential token models (for SLU)
-um_spg_seqtoken_decoder_file='Spectro_Ziggurat121-ICASSPDecoderEx-H256-Drop0.12_forAVG5_TEST/checkpoint.best_avg5.pt'
-um_w2v2frMlarge_seqtoken_decoder_file='./FlowBERT-M-Fr-large_Ziggurat121-ICASSPDecoderEx-H256-Drop0.12_forAVG5_TEST/checkpoint.best_avg5.pt'
-
-# Basic SLU models (for sequential SLU)
-#um_spg_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_spectro-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_TEST/checkpoint.best_avg5.pt'
-um_spg_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_spectro-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_NewLoad_TEST/checkpoint.best_avg5.pt'
-um_w2v2fr1Kbase_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBBERT-1Kb-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr1Klarge_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-1Kl-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr2o6Kbase_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBBERT-2.6Kb-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr3Kbase_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBBERT-3Kb-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr3Klarge_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-3Kl-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt' #'./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-3Kl-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_NewLoad_TEST//checkpoint.best_avg5.pt'
-um_w2v2fr3Klarge_sstuned_slu_decoder_file='Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-3Klt-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr3Klarge_svtuned_slu_decoder_file='Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-3Kls-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr7Kbase_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBBERT-7Kb-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt' #'./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBBERT-7Kb-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_NewLoad_TEST/checkpoint.best_avg5.pt'
-um_w2v2fr7Klarge_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-7Kl-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt' #'./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-Fr-Normalized_BATCH5-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_NewLoad_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr7Klarge_sstuned_slu_decoder_file='Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-7Klt-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2fr7Klarge_svtuned_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-7Kls-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt' #'Ziggurat_Dec-basic-concept_media_Drop0.5_FlowBERT-7Kls-Fr-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-
-um_w2v2en1Kbase_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_W2V2-En-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_w2v2en1Klarge_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_W2V2-Large-En-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-
-um_xlsr53mllarge_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_XLSR53-ML-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_xlsr53mllarge_sstuned_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_XLSR53-SS-ML-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-um_xlsr53mllarge_svtuned_slu_decoder_file='./Ziggurat_Dec-basic-concept_media_Drop0.5_XLSR53-SV-ML-Normalized_BATCH10-LR0.000510204-Shrink0.98-StartAnneal1_forAVG5_LatestCorrect_TEST/checkpoint.best5_avg.pt'
-
 wu_epochs=2
 wu_updates=$((${wu_epochs}*5393))
 warmup_opt="--warmup-updates ${wu_updates}"
-#if [[ ${FEATURES_TYPE} != 'spectro' ]]; then
-#	warmup_opt="--warmup-updates 5393"
-#fi
+
 #CUDA_VISIBLE_DEVICES=1
-PYTHONPATH=${HOME}/work/tools/fairseq/ ${FAIRSEQ_PATH}/fairseq-train ${DATA_PATH} --load-fairseq-encoder ${um_xlsr53mllarge_svtuned_slu_decoder_file} \
+PYTHONPATH=${HOME}/work/tools/fairseq/ ${FAIRSEQ_PATH}/fairseq-train ${DATA_PATH} \
 	--task end2end_slu --arch end2end_slu_arch --criterion ${CRITERION} --num-workers=0 --distributed-world-size 1 \
 	--decoder ${DECODER} --padded-reference \
 	--save-dir ${SAVE_PATH} --patience 20 --no-epoch-checkpoints \
@@ -145,8 +105,4 @@ PYTHONPATH=${HOME}/work/tools/fairseq/ ${FAIRSEQ_PATH}/fairseq-train ${DATA_PATH
 	--lr-scheduler fixed --lr ${LR} --force-anneal ${ANNEAL} --lr-shrink ${LR_SHRINK} ${warmup_opt} \
 	--optimizer adam --clip-norm ${CLIP_NORM} --weight-decay ${WDECAY} \
 	--max-sentences ${BATCH} --max-epoch ${MAX_EPOCHS} --curriculum 1 --keep-best-checkpoints 5
-
-#deactivate
-#conda deactivate
-
 
