@@ -206,7 +206,6 @@ If you want to extract features on your own with your wav2vec 2.0 models, you ca
 Since features are extracted once for all, I did not add command line options to the script, you need to modify flags and variables in the script.
 Some models used to extract features are reachable via links in the table above, or from our [HuggingFace repository](https://huggingface.co/LeBenchmark).
 
-```
 Flags:
 - **upsample**: if set to True, the script will upsample signals to twice the sample rate (this is because MEDIA is 8kHz but 16kHz signals are needed)
 - **cuda**: if set to True, the script will use a GPU for extracting features. This is much faster, but MEDIA contains long signals that make the script crash, so for some of them I run on CPU.
@@ -214,7 +213,6 @@ Flags:
 - **model_size**: if set to 'large', the script will perform a layer normalization on input signals, as needed with *large* wav2vec 2.0 models
 - **add_ext**: if set to True, the script will assume the input list is made of filename prefixes without extension, and will add it if needed
 - **file_ext**: the file extension to give to the extracted feature files
-```
 
 **NOTE**: you may need to modify also the *device* variable in case you want to run the script on a different GPU than specified in the script.
 
