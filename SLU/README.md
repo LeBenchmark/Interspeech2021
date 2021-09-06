@@ -233,7 +233,22 @@ In particular:
 - **FAIRSEQ_PATH** must set to point the folder where the Fairseq tools are located (fairseq-train, fairseq-generate, etc.)
 - **WORK_PATH** must be set to any working directory on your machine
 - **DATA_PATH** must be set to the directory containing the input data. This can be any directory, even empty, if you have already serialized input features
-- **SERIALIZED_CORPUS** is the common prefix to all serialized input features files (train, dev, test and dict).
+- **SERIALIZED_CORPUS** is the common prefix to all serialized input features files (train, dev, test and dict), see [here](http://www.marcodinarelli.it/is2021.php).
+
+The **SERIALIZED_CORPUS** prefix is actually automatically created based on a couple of other variables specified right above in the script: **FEATURES_TYPE**, **FEATURES_SPEC**, **FEATURES_LANG**, **NORMFLAG**.
+
+- **FEATURES_TYPE** can be ***spectro*** for spectrograms, ***FlowBERT*** for wav2vec 2.0 large features, ***FlowBBERT*** for wav2vec 2.0 base features, and son on. See the script itself and/or file names [here](http://www.marcodinarelli.it/is2021.php).
+- **FEATURES_SPEC** is used to specify additional information in the file name, e.g. 3Kl for the French wav2vec 2.0 large model trained on 3K hours of speech.
+- **FEATURES_LANG** is used for the language of the wav2vec 2.0 model (use ***ML*** for the XLSR53 model features)
+- **NORMFLAG** is set always to ***Normalized***.
+
+Note that the values of these variables is completly arbitrary. However they must match those used when creating serialized feature files if you want to (re-)use serialized feature files like those available [here](http://www.marcodinarelli.it/is2021.php).
+
+There are 3 additional variables in the script in the same section: **FEATURES_EXTN**, **SUBTASK**, and **CORPUS**.
+
+- **FEATURES_EXTN** is the file extension of feature files. This is used when you don't have (yet) serialized feature files and you want to read-in input data
+- **SUBTASK** can be ***token*** or ***concept*** and is used to specify which units the model should be trained to predict: ***token*** for ASR, ***concept*** for SLU. See also below.
+- **CORPUS** is an ID for the corpus used in the experiments. You should leave it set to ***media*** if you are using the MEDIA corpus.
 
 Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M C_M"> **EOC**.
 **SOC** and **EOC** are start and end of concept markers, <img src="https://render.githubusercontent.com/render/math?math=w_1^i \dots w_N^i C_i"> are the words instantiating the concept <img src="https://render.githubusercontent.com/render/math?math=C_i">, followed by the concept itself.
