@@ -202,7 +202,7 @@ Once you have a running installation of Fairseq, you just have to copy files in 
 
 Input features used for our [Interspeech 2021 paper](https://arxiv.org/abs/2104.11462), and for our NeurIPS submission are available [here](http://www.marcodinarelli.it/is2021.php), so that you don't need the original data or to extract features on your own.
 
-If you want extract to features on your own with your wav2vec 2.0 models, you can use the **extract_flowbert_features.py** script.
+If you want to extract features on your own with your wav2vec 2.0 models, you can use the **extract_flowbert_features.py** script.
 Since features are extracted once for all, I did not add command line options to the script, you need to modify flags and variables in the script.
 Some models used to extract features are reachable via links in the table above, or from our [HuggingFace repository](https://huggingface.co/LeBenchmark).
 
@@ -218,13 +218,18 @@ Flags:
 
 Variables:
 - **prefix_list**: the input list, one file per line with absolute path, with or without extension. If the extension is not given, the script will assume '.wav' as the signal extension
-- **flowbert_path**: the absolute path to the wav2vec 2.0 model to use for extracting features. **NOTE**: if you want to extract features with a model finetuned with the [supervised finetuning procedure](https://github.com/pytorch/fairseq/blob/master/examples/wav2vec/README.md#fine-tune-a-pre-trained-model-with-ctc), because of the way Fairseq instantiate and load models, you will need to specify also the model used as fine-tunning starting point in the variable **sv_starting_point**. Since in the end Fairseq initialize parameters with the model specified in **flowbert_path**, the second model can be identical to the first.
+- **flowbert_path**: the absolute path to the wav2vec 2.0 model to use for extracting features. **NOTE**: if you want to extract features with a model finetuned with the [supervised finetuning procedure](https://github.com/pytorch/fairseq/blob/master/examples/wav2vec/README.md#fine-tune-a-pre-trained-model-with-ctc), because of the way Fairseq instantiate and load models, you will need to specify also the model used as fine-tuning starting point in the variable **sv_starting_point**. Since in the end Fairseq initialize parameters with the model specified in **flowbert_path**, the second model can be identical to the first.
 
 Once flags and variables have been set properly, you can run the script simply as **python extract_flowbert_features.py** from command line, making sure the correct python environement with Fairseq 0.10 is active.
 
 ### Training
 
-In order to train a model with a Basic decoder (a linear layer), run the script **run_end2end_slu_train_basic.sh** (you need to modify environment variables in the script so that to match your installation, your home, etc. on your machine).
+In order to train a model with a Basic decoder (a linear layer), run the script **run_end2end_slu_train_basic.sh**.
+You need to modify environment variables in the script so that to match installation, home, input, etc. on your machine.
+In particular:
+- the line **source ${HOME}/work/tools/venv_python3.7.2_torch1.4_decore0/bin/activate** must be changed to activate your python virtual env
+- **FAIRSEQ_PATH** must set to point the folder where the Fairseq tools are located (fairseq-train, fairseq-generate, etc.)
+- 
 
 Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M C_M"> **EOC**.
 **SOC** and **EOC** are start and end of concept markers, <img src="https://render.githubusercontent.com/render/math?math=w_1^i \dots w_N^i C_i"> are the words instantiating the concept <img src="https://render.githubusercontent.com/render/math?math=C_i">, followed by the concept itself.
