@@ -253,15 +253,17 @@ There are 3 additional variables in the script in the same section: **FEATURES_E
 Pay attention to the option **--slu-subtask**: with a value **'token'** you will train an ASR model (token decoding); with a value **'concept'** you will train a SLU model where the expected output format is **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^1 \dots w_N^1 C_1"> **EOC** ... **SOC** <img src="https://render.githubusercontent.com/render/math?math=w_1^M \dots w_N^M C_M"> **EOC**.
 **SOC** and **EOC** are start and end of concept markers, <img src="https://render.githubusercontent.com/render/math?math=w_1^i \dots w_N^i C_i"> are the words instantiating the concept <img src="https://render.githubusercontent.com/render/math?math=C_i">, followed by the concept itself.
 
-In order to train a model with a LSTM decoder (the version of LSTM decoder described above), run the script **run_end2end_slu_train_icassplstm.sh** (again, you need to modify environment variables in the script so that to match your installation, your home, etc. on your machine).
+In order to train a model with a LSTM decoder (the version of LSTM decoder described above), run the script **run_end2end_slu_train_icassplstm.sh**.
+Again, you need to modify environment variables in the script so that to match installation, home, etc. on your machine. See above.
 In this script also you need to set properly the option **--slu-subtask**:
 
 In order to train a model pre-initializing parameters with a previously trained model, use the option:
 ```--load-fairseq-encoder <model file>```
 
-This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder's type is the same in the instantiated and loaded models, and in that case it pre-initializes also the decoder.
+This option is intended to pre-initilize the encoder as explained in the paper. However the system detects automatically if the decoder's type is the same in the instantiated and loaded models, and in that case it pre-initializes also the decoder. This is especially useful when pre-initializing a SLU model with a linear decoder with a ASR model with a linear decoder.
+Pay attention to remove this option when training an ASR model from scratch.
 
-At the first run, the system will read data and save them in a serialized format, containing all the tensors needed for training (and generation). At following runs you can use such data with the option **--serialized-corpus \<data prefix>**. _\<data prefix\>_ is the prefix in common to all the generated files (train, validation, test data plus the dictionary).
+At the first run, the system will read data and save them in a serialized format, containing all the tensors needed for training (and generation). At following runs you can use such data with the option **--serialized-corpus \<data prefix>**. _\<data prefix\>_ is the prefix in common to all the generated files (train, validation, test data plus the dictionary). See also the **SERIALIZED_CORPUS** variable above.
 This makes data loading much faster, especially when using _wav2vec_ features as input.
 
 Input features are available [here](http://www.marcodinarelli.it/is2021.php), so that you don't need the original data or to extract features on your own.
@@ -270,7 +272,8 @@ Input features are available [here](http://www.marcodinarelli.it/is2021.php), so
 
 ```run_end2end_slu_test.sh <checkpoint path> <serialized corpus> <sub-task>```
 
-This will generate an output in the same folder as the checkpoint.
+This will generate an output in the same folder as the checkpoint. Once again, you need to set properly some environment variable in the script like for training scripts.
+
 Pay attention to the **\<\<sub-task\>\>** argument which will initialize the **--slu-subtask** option in the script to generate the correct reference to compare the system output with.
 
 ### Scoring
