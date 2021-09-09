@@ -104,21 +104,21 @@ fi
 # Download models to extract wav2vec 2.0 features
 if [ $stage -le 10 ]; then
   # TODO download a model for wav2vec feature extraction
-  # https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large          #French
+  # https://huggingface.co/LeBenchmark/wav2vec2-FR-3K-large          #French
   # https://dl.fbaipublicfiles.com/fairseq/wav2vec/libri960_big.pt  #English
   # https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt   #Multi-lingual 
   mkdir -p data/models
   cd data/models 
   wget https://dl.fbaipublicfiles.com/fairseq/wav2vec/xlsr_53_56k.pt || exit 1  
   git lfs install || exit 1
-  git clone https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large || exit 1
-  ln -s wav2vec2-FR-M-large/checkpoint_best.pt  wav2vec2-FR-M-large.pt
+  git clone https://huggingface.co/LeBenchmark/wav2vec2-FR-3K-large || exit 1
+  ln -s wav2vec2-FR-3K-large/checkpoint_best.pt  wav2vec2-FR-3K-large.pt
   cd ..
 fi
 
 # Extract wav2vec 2.0 features
 if [ $stage -le 11 ]; then
-  model=data/models/wav2vec2-FR-M-large.pt
+  model=data/models/wav2vec2-FR-3K-large.pt
   # model=data/models/xlsr_53_56k.pt  
   for dset in dev test train_cleaned_sp; do
     utils/copy_data_dir.sh data/$dset data/${dset}_w2v
