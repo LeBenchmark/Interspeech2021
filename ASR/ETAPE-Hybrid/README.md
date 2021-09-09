@@ -21,7 +21,7 @@ Results are reported in https://arxiv.org/pdf/2104.11462.pdf, Table 2.
   </thead>
   <thead>
     <tr>
-      <th>Features</th>
+      <th>Features (New name)</th>
       <th>Dev</th>
       <th>Test</th>
       <th>Dev</th>
@@ -38,7 +38,7 @@ Results are reported in https://arxiv.org/pdf/2104.11462.pdf, Table 2.
     <td>37.73</td>
    </tr>
    <tr> 
-    <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-M-large>W2V2-Fr-M-large</a></td>
+    <td><a href=https://huggingface.co/LeBenchmark/wav2vec2-FR-3K-large>W2V2-Fr-M-large (W2V-Fr-3K-large) </a></td>
     <td>32.19</td>
     <td>33.87</td>
     <td>28.53</td>
