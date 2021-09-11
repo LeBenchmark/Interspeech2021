@@ -10,7 +10,7 @@ ETAPE-1,2 French corpus: 30 hours of French radio and TV data
 https://catalogue.elra.info/en-us/repository/browse/ELRA-E0046/
 
 ## Results
-Results are reported in https://arxiv.org/pdf/2104.11462.pdf, Table 2.
+Results are reported in https://www.isca-speech.org/archive/pdfs/interspeech_2021/evain21_interspeech.pdf, Table 2.
 <table>
   <thead>
     <tr>
