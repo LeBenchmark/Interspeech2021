@@ -31,7 +31,7 @@ ATT_HEADS=8
 DLAYERS=2
 DROP_RATIO=0.5
 TRANS_DROP_RATIO=0.12
-MAX_EPOCHS=150
+MAX_EPOCHS=100
 LR=0.0005
 LR_SHRINK=0.98
 WDECAY=0.0001
@@ -93,7 +93,7 @@ warmup_opt="--warmup-updates ${wu_updates}"
 PYTHONPATH=${HOME}/work/tools/fairseq/ ${FAIRSEQ_PATH}/fairseq-train ${DATA_PATH} \
 	--task end2end_slu --arch end2end_slu_arch --criterion ${CRITERION} --num-workers=0 --distributed-world-size 1 \
 	--decoder ${DECODER} --padded-reference \
-	--save-dir ${SAVE_PATH} --patience 20 --no-epoch-checkpoints \
+	--save-dir ${SAVE_PATH} --patience 10 --no-epoch-checkpoints \
 	--speech-conv ${NCONV} --num-features ${NUM_FEATURES} --speech-conv-size ${encoder_size} --drop-ratio ${DROP_RATIO} \
 	--num-lstm-layers ${NLSTM} --speech-lstm-size ${encoder_size} --window-time ${WINTIME} --w2v-language ${FEATURES_LANG} \
 	--encoder-normalize-before --encoder-layers 1 --encoder-attention-heads ${ATT_HEADS} --encoder-ffn-embed-dim ${ENC_FFN_DIM} \
