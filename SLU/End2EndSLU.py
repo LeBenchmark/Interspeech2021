@@ -194,10 +194,10 @@ def parse_media_semantic_annotation(filename):
         concept_list = []
         concepts = concepts_str.split('@')
         for c in concepts:
-            if len(c) > 0:
+            if len(c) > 0 and c != 'null{} ' and c != 'null{}':
                 m = p.match(c)
                 if m == None:
-                    sys.stderr.write(' - ERROR: parse_media_semantic_annotation parsing error at {}\n'.format(c))
+                    sys.stderr.write(' - ERROR: parse_media_semantic_annotation parsing error at {} while parsing file {}\n'.format(c, filename))
                     sys.exit(1)
                 else:
                     (mode,concept,surface) = (m.group(1),m.group(2),clean_re.sub('',m.group(3)))
@@ -271,7 +271,7 @@ def read_dialog_data(TurnList, args):
         f.close()
 
     for turn in turns:
-        dialog_id, turn_id = parse_filename( args, turn )
+        dialog_id, turn_id = parse_filename( args, turn ) 
 
         if dialog_id not in dialog_data:
             dialog_data[dialog_id] = [] 
@@ -360,13 +360,58 @@ def read_dialog_data(TurnList, args):
                     sys.stderr.write(' *** read_dialog_data WARNING: turn_id {} is not unic\n'.format(turn_id))
             elif args.corpus_name == 'fsc':
                 turn_sem = read_txt(turn.strip() + '.sem')
-                turn_data.append( turn_sem )
+                tt = turn_sem.split()
+                c1, c2, c3 = '-'.join(tt[:-2]), tt[-2], tt[-1]
+                turn_data.append( c1 + ' ' + c2 + ' ' + c3 )
+                turn_data.append( user_ID )
             else:
-                raise NotImplementedError
+                raise NotImplementedError 
 
             dialog_data[dialog_id].append( turn_data )
 
     return dialog_data
+
+def get_character_level_slu_turn(slu_turn_tsr, vocab, pad_flag=False):
+
+    slu_turn_str = vocab.string(slu_turn_tsr)
+
+    #print('Original turn: {}'.format(slu_turn_str))
+    #print(' -----')
+
+    tokens = slu_turn_str.split()
+    char_slu_turn_str = ''
+    if pad_flag:
+        char_slu_turn_str = SOS_tag
+    chunk = {}
+    chunk['surface'] = []
+    for t in tokens:
+        if t == slu_start_concept_mark:
+            chunk['start'] = t
+        elif t == slu_end_concept_mark:
+            chunk['end'] = t
+            chunk['concept'] = chunk['surface'][-1]
+            chunk['surface'] = chunk['surface'][:-1]
+
+            if char_slu_turn_str != '':
+                char_slu_turn_str = char_slu_turn_str + ' '
+            char_slu_turn_str = char_slu_turn_str + chunk['start'] + ' '
+            for c in '|'.join(chunk['surface']).lower():
+                char_slu_turn_str = char_slu_turn_str + c + ' '
+            char_slu_turn_str = char_slu_turn_str + chunk['concept'] + ' ' + chunk['end'] + ' '
+            chunk = {}
+            chunk['surface'] = []
+        else:
+            chunk['surface'].append(t)
+
+    if pad_flag:
+        char_slu_turn_str = char_slu_turn_str + EOS_tag
+    else:
+        char_slu_turn_str = char_slu_turn_str[:-1] # Remove trailing space
+
+    #print('Character-level turn: {}'.format(char_slu_turn_str))
+    #print(' -----')
+
+    return char_slu_turn_str
 
 def references2indexes(args, data, vocab):
 
@@ -463,10 +508,11 @@ class End2EndSLU(FairseqTask):
         parser.add_argument( '--load-fairseq-decoder', type=str, help='Load the decoder from a fairseq checkpoint' )
         parser.add_argument( '--slu-end2end', action='store_true', default=False, help='Add an auxiliary loss for an additional output expected in the model output structure' )
         parser.add_argument('--scheduled-sampling', action='store_true', default=False, help='Use scheduled sampling during training')
-        parser.add_argument('--encoder-state-window', type=int, default=2, help='Size w of the window of encoder states attended by the cross attention')
-        parser.add_argument('--pyramid-hidden-layers', type=int, default=2, help='Number of layers in the hidden LSTM stages of the pyramidal encoder')
-        parser.add_argument('--prev-prediction-query', type=int, default=-1, help='Index of the decoder hidden state used as query on the previous predictions')
+        parser.add_argument('--encoder-state-window', type=int, default=1, help='Size w of the window of encoder states attended by the cross attention')
+        parser.add_argument('--pyramid-hidden-layers', type=int, default=1, help='Number of layers in the hidden LSTM stages of the pyramidal encoder')
+        parser.add_argument('--prev-prediction-query', type=int, default=0, help='Index of the decoder hidden state layer used as query on the previous predictions')
         parser.add_argument('--feature-extension', type=str, default='.20.0ms-spg', help='Extenion of the feature file name')
+        parser.add_argument('--character-level-slu', action='store_true', default=False, help='Perform SLU from character-level transcription')
 
     @classmethod
     def setup_task(cls, args, **kwargs):
@@ -753,10 +799,41 @@ class End2EndSLU(FairseqTask):
         self.sos_tag_idx = self.label_vocab.index( SOS_tag )
         self.eos_tag_idx = self.label_vocab.index( EOS_tag )
         self.slu_start_concept_idx = self.label_vocab.index( slu_start_concept_mark )
-        self.slu_end_concept_idx = self.label_vocab.index( slu_end_concept_mark ) 
+        self.slu_end_concept_idx = self.label_vocab.index( slu_end_concept_mark )
 
         # data for each turn are: turn-id, signal-tensor, char-sequence (int) tensor, token-sequence (int) tensor, concept-sequence (int) tensor, speaker-id (machine or user)
         # data are organized as a dict of lists: the dict is indexed with dialog-id, the value is the list of turns for that dialog, each turn structure contains data described above.
+
+        #debug_idx = 0
+        length_missmatch = 0
+        total = 0
+        max_turn_length = 0
+        if self.args.character_level_slu:
+            for did in corpus[my_split]:
+                total = total + len(corpus[my_split][did])
+                for t_idx in range(len(corpus[my_split][did])):
+                    t = corpus[my_split][did][t_idx]
+                    char_slu_turn = get_character_level_slu_turn(t[4], self.label_vocab, self.args.padded_reference)
+                    char_t = char_slu_turn.split()
+                    if len(char_t) > max_turn_length:
+                        max_turn_length = len(char_t)
+                        if max_turn_length > 1024:
+                            print(' ### Got strangely long turn ({}): {}'.format(max_turn_length, char_slu_turn))
+                    slu_t = torch.LongTensor( [self.label_vocab.add_symbol(c) for c in char_t] )
+                    turn_tuple = (t[0], t[1], t[2], t[3], slu_t, t[5])
+                    corpus[my_split][did][t_idx] = turn_tuple
+                    if t[1].size(0)//self.args.num_lstm_layers < slu_t.size(0):
+                        #print('    - found missmatch: {} vs. {}'.format(t[1].size(0)//4, slu_t.size(0)))
+                        length_missmatch += 1
+                    #if debug_idx >= 10:
+                    #    sys.exit(0)
+                    #debug_idx += 1
+            if length_missmatch > 0:
+                print('   *** End2EndSLU: {} out of {} length miss-match detected converting to character-level SLU output'.format(length_missmatch, total))
+                print('   *** End2EndSLU: max character-level turn length is {}'.format(max_turn_length))
+                sys.stdout.flush()
+
+        #sys.exit(0)
 
         '''print(' ***** End2End SLU task, {} split data loading...'.format(my_split))
         print(' *** SLU task: blank-idx {}'.format(self.blank_idx))

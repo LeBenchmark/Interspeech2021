@@ -186,7 +186,7 @@ class End2EndSLUDataset(FairseqDataset):
         tgt, tgt_sizes, tgt_dict,
         idx_structure,
         left_pad_target=False,
-        max_source_positions=10000, max_target_positions=1024,
+        max_source_positions=10000, max_target_positions=10000,
         shuffle=True, input_feeding=True,
         append_eos_to_target=False,
         append_bos=False, eos=None

@@ -33,8 +33,7 @@ from fairseq.modules import (
     AdaptiveSoftmax,
     LayerNorm,
     PositionalEmbedding,
-    SinusoidalPositionalEmbedding, 
-    LinformerEncoderLayer,
+    SinusoidalPositionalEmbedding,
 )
 from torch import Tensor
 
@@ -195,6 +194,12 @@ class PyramidalRNNEncoder(nn.Module):
         # x is expected as Length x Batch-size x Num. of features, that is T x B x C
 
         T, B, C = x.size()
+        '''if self.params.character_level_slu:
+            idxs = torch.LongTensor( [(i,i) for i in range(T)] )
+            x = x[idxs,:,:].view(-1,B,C)
+
+            #print(' New input tensor size: {} (old {})'.format(x.size(), T))
+            #sys.exit(0)'''
         if T % 2 != 0: 
             x = torch.cat( [x,torch.zeros(1,B,C).to(x)], 0 )
             T, B, C = x.size() 
@@ -235,7 +240,7 @@ class BasicEncoder(nn.Module):
         # 1. Convolutions
         conv_layers = []
         for i in range(self.params.speech_conv):
-            conv_stride = 2
+            conv_stride = 1
             if i == self.params.speech_conv-1:
                 conv_stride = 2
             input_size = self.params.speech_conv_size
@@ -297,23 +302,10 @@ class End2EndSLUEncoder(FairseqEncoder):
         self.padding_idx = dictionary.pad_index
         self.blank_idx = dictionary.set_blank() 
 
-        #self.encoder = BasicEncoder(args)
-        self.encoder = PyramidalRNNEncoder(args, dictionary)
+        self.encoder = BasicEncoder(args)
+        #self.encoder = PyramidalRNNEncoder(args, dictionary)
         self.encoder_output_units = self.encoder.encoder_output_units  # NEW ARCHITECTURE FOR COMBINED LOSS: the current output is the projection to the output dict, unless we are giving hidden states to the decoder instead of output projections
-
-        self.return_all_hiddens = False #args.return_all_hiddens
-        self.trans_layers = None
-        if args.encoder_transformer_layers:
-            old_val = args.encoder_embed_dim
-            args.encoder_embed_dim = args.encoder_hidden_dim * 2
-            self.trans_layers = nn.ModuleList([])
-            self.trans_layers.extend(
-                [LinformerEncoderLayer(args) for i in range(args.encoder_layers)]
-            )
-            self.num_layers = len(self.trans_layers)
-            self.trans_layer_norm = nn.LayerNorm(args.encoder_embed_dim) if args.encoder_normalize_before else None
-            args.encoder_embed_dim = old_val
-
+        self.return_all_hiddens = False
         self.speakers = None
 
         # NEW ARCHITECTURE FOR COMBINED LOSS
@@ -364,8 +356,8 @@ class End2EndSLUEncoder(FairseqEncoder):
 
         x = src_tokens.transpose(0,1) 
 
-        #(conv_states, hidden_states) = self.encoder( x )
-        hidden_states = self.encoder( x ) 
+        (conv_states, hidden_states) = self.encoder( x )
+        #hidden_states = self.encoder( x ) 
         (src_len, bsz, dim) = hidden_states.size() #conv_states.size()
         #(h_src_len, h_bsz, h_dim) = hidden_states.size() 
 
@@ -379,17 +371,6 @@ class End2EndSLUEncoder(FairseqEncoder):
         encoder_states = [] if self.return_all_hiddens else None
 
         x = hidden_states
-        if self.args.encoder_transformer_layers:
-            for layer in self.trans_layers:
-                x = layer(x, encoder_padding_mask)
-                if self.return_all_hiddens:
-                    assert encoder_states is not None
-                    encoder_states.append(x)
-
-            if self.trans_layer_norm is not None:
-                x = self.trans_layer_norm(x)
-                if self.return_all_hiddens:
-                    encoder_states[-1] = x
 
         # NEW ARCHITECTURE FOR COMBINED LOSS
         #x = self.output_projection(x)
