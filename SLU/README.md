@@ -184,7 +184,7 @@ For more details please see the [paper accepted at Interspeech 2021](https://arx
 
 # Installation
 
-The system was developped under **python 3.7, pytorch 1.4.0 and Fairseq 0.9**, it can probably work with other version of python and pytorch, but it will not work for sure under Fariseq 0.10 or more recent. Tha's why we recommend, in order to reproduce our results, to download and install [Fairseq 0.9](https://github.com/pytorch/fairseq/releases/tag/v0.9.0).
+The system was developped under **python 3.7, pytorch 1.4.0 and Fairseq 0.9**, it can probably work with other version of python and pytorch, but it will not work for sure under Fariseq 0.10 or more recent. Tha's why we recommend, in order to reproduce our results, to download and install [this version of Fairseq 0.9](https://github.com/pytorch/fairseq/tree/d5618e9ecd05a1edaba5c0991efb3503f121d132).
 Once you have a running installation of Fairseq, you just have to copy files in the correct directories:
 
 - **End2EndSLU.py** in fairseq/tasks/
